@@ -21,6 +21,7 @@
 #include <transmission_interface/transmission_parser.h>
 
 #include <boost/foreach.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 namespace layered_hardware {
 
@@ -96,27 +97,33 @@ private:
 struct ActuatorPositionCommandWriter {
   static void write(double *pos, double *vel, double *eff, const double pos_cmd,
                     const ros::Duration &period) {
-    *vel = (pos_cmd - *pos) / period.toSec();
-    *pos = pos_cmd;
-    *eff = 0.;
+    if (!boost::math::isnan(pos_cmd)) {
+      *vel = (pos_cmd - *pos) / period.toSec();
+      *pos = pos_cmd;
+      *eff = 0.;
+    }
   }
 };
 
 struct ActuatorVelocityCommandWriter {
   static void write(double *pos, double *vel, double *eff, const double vel_cmd,
                     const ros::Duration &period) {
-    *pos += vel_cmd * period.toSec();
-    *vel = vel_cmd;
-    *eff = 0.;
+    if (!boost::math::isnan(vel_cmd)) {
+      *pos += vel_cmd * period.toSec();
+      *vel = vel_cmd;
+      *eff = 0.;
+    }
   }
 };
 
 struct ActuatorEffortCommandWriter {
   static void write(double *pos, double *vel, double *eff, const double eff_cmd,
                     const ros::Duration &period) {
-    *pos = 0.;
-    *vel = 0.;
-    *eff = eff_cmd;
+    if (!boost::math::isnan(eff_cmd)) {
+      *pos = 0.;
+      *vel = 0.;
+      *eff = eff_cmd;
+    }
   }
 };
 
