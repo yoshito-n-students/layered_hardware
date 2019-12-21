@@ -1,0 +1,43 @@
+<library path="lib/liblayered_hardware_default_plugins">
+
+  <class name="layered_hardware/DummyEffortActuatorLayer"
+         type="layered_hardware::DummyEffortActuatorLayer"
+         base_class_type="layered_hardware::LayerBase">
+    <description>
+      Hardware layer that implements effort-controlled dummy actuators
+    </description>
+  </class>
+  
+  <class name="layered_hardware/DummyPositionActuatorLayer"
+         type="layered_hardware::DummyPositionActuatorLayer"
+         base_class_type="layered_hardware::LayerBase">
+    <description>
+      Hardware layer that implements position-controlled dummy actuators
+    </description>
+  </class>
+
+  <class name="layered_hardware/DummyVelocityActuatorLayer"
+         type="layered_hardware::DummyVelocityActuatorLayer"
+         base_class_type="layered_hardware::LayerBase">
+    <description>
+      Hardware layer that implements velocity-controlled dummy actuators
+    </description>
+  </class>
+
+  <class name="layered_hardware/JointLimitsLayer"
+         type="layered_hardware::JointLimitsLayer"
+         base_class_type="layered_hardware::LayerBase">
+    <description>
+      Hardware layer that implements joint_limits scheme
+    </description>
+  </class>
+
+  <class name="layered_hardware/TransmissionLayer"
+         type="layered_hardware::TransmissionLayer"
+         base_class_type="layered_hardware::LayerBase">
+    <description>
+      Hardware layer that implements transmission scheme
+    </description>
+  </class>
+
+</library>

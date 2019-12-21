@@ -1,0 +1,64 @@
+<robot name="example_3dof_manipulator">
+
+    <!-- body => [shoulder] => upper_arm -->
+
+    <link name="body" />
+
+    <joint name="shoulder" type="revolute">
+        <parent link="body" />
+        <child link="upper_arm" />
+        <limit lower="0" upper="3.14" effort="10.0" velocity="1.0" />
+    </joint>
+
+    <transmission name="shoulder_trans">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="shoulder">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="shoulder_actuator">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+    <link name="upper_arm" />
+
+    <!-- upper_arm => [elbow] => forearm -->
+
+    <joint name="elbow" type="continuous">
+        <parent link="upper_arm" />
+        <child link="forearm" />
+    </joint>
+
+    <transmission name="elbow_trans">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="elbow">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="elbow_actuator">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+    <link name="forearm" />
+
+    <!-- forearm => [wrist] => hand -->
+
+    <joint name="wrist" type="revolute">
+        <parent link="forearm" />
+        <child link="hand" />
+        <limit effort="10.0" velocity="1.0" />
+    </joint>
+
+    <transmission name="wrist_trans">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="wrist">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="wrist_actuator">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+    <link name="hand" />
+
+</robot>
