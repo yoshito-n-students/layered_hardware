@@ -39,4 +39,6 @@
     <node name="controller_starter" pkg="controller_manager" type="controller_manager" output="screen"
           args="spawn joint_state_controller shoulder_controller elbow_controller wrist_controller" />
 
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen" />
+
 </launch>

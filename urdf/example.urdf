@@ -5,6 +5,7 @@
     <link name="body" />
 
     <joint name="shoulder" type="revolute">
+        <origin xyz="0 0 0" />
         <parent link="body" />
         <child link="upper_arm" />
         <limit lower="0" upper="3.14" effort="10.0" velocity="1.0" />
@@ -25,6 +26,7 @@
     <!-- upper_arm => [elbow] => forearm -->
 
     <joint name="elbow" type="continuous">
+        <origin xyz="0.2 0 0" />
         <parent link="upper_arm" />
         <child link="forearm" />
     </joint>
@@ -44,9 +46,10 @@
     <!-- forearm => [wrist] => hand -->
 
     <joint name="wrist" type="revolute">
+        <origin xyz="0.2 0 0" />
         <parent link="forearm" />
         <child link="hand" />
-        <limit effort="10.0" velocity="1.0" />
+        <limit lower="-1.0" upper="1.0" effort="10.0" velocity="1.0" />
     </joint>
 
     <transmission name="wrist_trans">
