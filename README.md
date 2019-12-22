@@ -22,9 +22,11 @@ see [launch/example.launch](launch/example.launch)
 ## Plugins: layered_hardware_default_plugins
 ### layered_hardware/JointLimitsLayer
 * implements general joint_limits_interface scheme
-* supports only hard lmits. will support soft limits soon
+* supports only hard lmits. will support soft limits soon.
+
 ### layered_hardware/TransmissionLayer
 * implements general transmission_interface scheme
+
 ### layered_hardware/Dummy{Position, Velocity, Effort}ActuatorLayer
 * implements dummy {position, velocity, effort}-controlled actuators
 * useful to debug your command generation, state visualization nodes, or transmissions without physical actuators and dynamics simulators
@@ -37,5 +39,4 @@ see [launch/example.launch](launch/example.launch)
 * layer implementation for ROBOTIS Dynamixel actuators
 
 **layered_hardware_epos**
-* layer implementation for MAXOS EPOS actuator dirvers
-* coming soon
+* layer implementation for MAXOS EPOS actuator dirvers (coming soon)
