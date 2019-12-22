@@ -28,7 +28,8 @@ namespace layered_hardware {
 
 class TransmissionLayer : public LayerBase {
 public:
-  virtual bool init(hi::RobotHW &hw, ros::NodeHandle &param_nh, const std::string &urdf_str) {
+  virtual bool init(hi::RobotHW *const hw, const ros::NodeHandle &param_nh,
+                    const std::string &urdf_str) {
     // extract transmission informations from URDF
     std::vector< ti::TransmissionInfo > infos;
     if (!ti::TransmissionParser::parse(urdf_str, infos)) {
@@ -37,7 +38,7 @@ public:
     }
 
     // get actuator names already registered in the hardware
-    const hi::ActuatorStateInterface *const ator_iface(hw.get< hi::ActuatorStateInterface >());
+    const hi::ActuatorStateInterface *const ator_iface(hw->get< hi::ActuatorStateInterface >());
     if (!ator_iface) {
       ROS_ERROR("TransmissionLayer::init(): No actuator registered");
       return false;
@@ -45,7 +46,7 @@ public:
     const std::vector< std::string > hw_ator_names(ator_iface->getNames());
 
     // load all transmissions for actuators in the hardware
-    iface_loader_.reset(new ti::TransmissionInterfaceLoader(&hw, &transmissions_));
+    iface_loader_.reset(new ti::TransmissionInterfaceLoader(hw, &transmissions_));
     BOOST_FOREACH (const ti::TransmissionInfo &info, infos) {
       // confirm the transmission is for some of actuators in the hardware
       bool has_non_hw_ator(false);

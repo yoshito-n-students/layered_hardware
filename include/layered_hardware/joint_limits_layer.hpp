@@ -27,12 +27,13 @@ namespace layered_hardware {
 
 class JointLimitsLayer : public LayerBase {
 public:
-  virtual bool init(hi::RobotHW &hw, ros::NodeHandle &param_nh, const std::string &urdf_str) {
+  virtual bool init(hi::RobotHW *const hw, const ros::NodeHandle &param_nh,
+                    const std::string &urdf_str) {
     // we do NOT register joint limit interfaces to the hardware
     // to prevent other layers from updating the interfaces
     // because the interfaces are stateful
     /*
-    hw.registerInterface(&pos_iface_);
+    hw->registerInterface(&pos_iface_);
     ...
     */
 
@@ -47,11 +48,11 @@ public:
     // and joint limits loaded from the URDF.
     // associated pairs will be stored in the limits interface.
     tieJointsAndLimits< hi::PositionJointInterface, jli::PositionJointSaturationHandle >(
-        hw, urdf_model, pos_iface_);
+        hw, urdf_model, &pos_iface_);
     tieJointsAndLimits< hi::VelocityJointInterface, jli::VelocityJointSaturationHandle >(
-        hw, urdf_model, vel_iface_);
+        hw, urdf_model, &vel_iface_);
     tieJointsAndLimits< hi::EffortJointInterface, jli::EffortJointSaturationHandle >(hw, urdf_model,
-                                                                                     eff_iface_);
+                                                                                     &eff_iface_);
 
     return true;
   }
@@ -74,10 +75,10 @@ public:
 
 private:
   template < typename CommandInterface, typename SaturationHandle, typename SaturationInterface >
-  void tieJointsAndLimits(hi::RobotHW &hw, const urdf::Model &urdf_model,
-                          SaturationInterface &sat_iface) {
+  void tieJointsAndLimits(hi::RobotHW *const hw, const urdf::Model &urdf_model,
+                          SaturationInterface *const sat_iface) {
     // find joint command interface that joints have been registered
-    CommandInterface *const cmd_iface(hw.get< CommandInterface >());
+    CommandInterface *const cmd_iface(hw->get< CommandInterface >());
     if (!cmd_iface) {
       return;
     }
@@ -96,9 +97,9 @@ private:
       }
       // register new associated pair
       ROS_INFO_STREAM("JointLimitsLayer::init(): Initialized the joint limits ("
-                      << hi::internal::demangledTypeName< SaturationHandle >() << ") for the joint '"
-                      << hw_jnt_name << "'");
-      sat_iface.registerHandle(SaturationHandle(cmd_iface->getHandle(hw_jnt_name), limits));
+                      << hi::internal::demangledTypeName< SaturationHandle >()
+                      << ") for the joint '" << hw_jnt_name << "'");
+      sat_iface->registerHandle(SaturationHandle(cmd_iface->getHandle(hw_jnt_name), limits));
     }
   }
 

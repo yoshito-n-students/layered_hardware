@@ -28,16 +28,11 @@ namespace layered_hardware {
 template < typename CommandInterface, typename CommandHandle, typename CommandWriter >
 class DummyActuatorLayer : public LayerBase {
 public:
-  virtual bool init(hi::RobotHW &hw, ros::NodeHandle &param_nh, const std::string &urdf_str) {
+  virtual bool init(hi::RobotHW *const hw, const ros::NodeHandle &param_nh,
+                    const std::string &urdf_str) {
     // register actuator interfaces to the hardware so that other layers can find the interfaces
-    if (!hw.get< hi::ActuatorStateInterface >()) {
-      hw.registerInterface(&getStateInterface());
-    }
-    hi::ActuatorStateInterface &state_iface(*hw.get< hi::ActuatorStateInterface >());
-    if (!hw.get< CommandInterface >()) {
-      hw.registerInterface(&getCommandInterface());
-    }
-    CommandInterface &cmd_iface(*hw.get< CommandInterface >());
+    hi::ActuatorStateInterface &state_iface(*makeRegistered< hi::ActuatorStateInterface >(hw));
+    CommandInterface &cmd_iface(*makeRegistered< CommandInterface >(hw));
 
     // get actuator names from param
     std::vector< std::string > ator_names;
@@ -85,14 +80,15 @@ public:
   }
 
 private:
-  static hi::ActuatorStateInterface &getStateInterface() {
-    static hi::ActuatorStateInterface state_iface;
-    return state_iface;
-  }
-
-  static CommandInterface &getCommandInterface() {
-    static CommandInterface cmd_iface;
-    return cmd_iface;
+  // makes an interface registered & returns the registered interface.
+  // if newly register an interface, it will be allocated in the static memory space
+  // so that other plugins can modify it.
+  template < typename Interface > static Interface *makeRegistered(hi::RobotHW *const hw) {
+    if (!hw->get< Interface >()) {
+      static Interface iface;
+      hw->registerInterface(&iface);
+    }
+    return hw->get< Interface >();
   }
 
 private:

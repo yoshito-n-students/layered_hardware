@@ -27,7 +27,7 @@ public:
 
   virtual ~LayeredHardware() {}
 
-  bool init(ros::NodeHandle &param_nh) {
+  bool init(const ros::NodeHandle &param_nh) {
     namespace rn = ros::names;
     namespace rp = ros::param;
 
@@ -58,7 +58,7 @@ public:
     // load & init layer instances from bottom (actuator-side) to upper (controller-side)
     layers_.resize(layer_names.size());
     for (int i = layers_.size() - 1; i >= 0; --i) {
-      ros::NodeHandle layer_param_nh(param_nh, layer_names[i]);
+      const ros::NodeHandle layer_param_nh(param_nh, layer_names[i]);
       // get layer's typename from param
       std::string lookup_name;
       if (!layer_param_nh.getParam("type", lookup_name)) {
@@ -76,7 +76,7 @@ public:
         return false;
       }
       // init the layer
-      if (!layers_[i]->init(*this, layer_param_nh, urdf_str)) {
+      if (!layers_[i]->init(this, layer_param_nh, urdf_str)) {
         ROS_ERROR_STREAM("LayeredHardware::init(): Failed to initialize the layer '"
                          << layer_names[i] << "'");
         return false;

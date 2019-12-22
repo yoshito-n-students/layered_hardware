@@ -17,7 +17,8 @@ namespace layered_hardware {
 
 class LayerBase {
 public:
-  virtual bool init(hi::RobotHW &hw, ros::NodeHandle &param_nh, const std::string &urdf_str) = 0;
+  virtual bool init(hi::RobotHW *const hw, const ros::NodeHandle &param_nh,
+                    const std::string &urdf_str) = 0;
 
   virtual void doSwitch(const std::list< hi::ControllerInfo > &start_list,
                         const std::list< hi::ControllerInfo > &stop_list) = 0;
@@ -25,6 +26,17 @@ public:
   virtual void read(const ros::Time &time, const ros::Duration &period) = 0;
 
   virtual void write(const ros::Time &time, const ros::Duration &period) = 0;
+
+protected:
+  // as of Melodic, [val NodeHandle::param(key, default_val)] is not a const method
+  // although [void NodeHandle::param(key, val_ref, default_val)] is.
+  // this offers the former signature to const NodeHandle.
+  template < typename T >
+  static T param(const ros::NodeHandle &nh, const std::string &key, const T &default_val) {
+    T val;
+    nh.param(key, val, default_val);
+    return val;
+  }
 };
 
 typedef boost::shared_ptr< LayerBase > LayerPtr;
