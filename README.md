@@ -28,6 +28,9 @@ see [launch/example.launch](launch/example.launch)
 ### layered_hardware/Dummy{Position, Velocity, Effort}ActuatorLayer
 * implements dummy {position, velocity, effort}-controlled actuators
 * useful to debug your command generation, state visualization nodes, or transmissions without physical actuators and dynamics simulators
+#### Parameters
+**~<layer_name>/actuators** (string array, required)
+* names of actuators to be managed by this layer
 
 ## Related packages
 **layered_hardware_dynamixel**
