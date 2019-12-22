@@ -30,35 +30,38 @@ class DummyActuatorLayer : public LayerBase {
 public:
   virtual bool init(hi::RobotHW &hw, ros::NodeHandle &param_nh, const std::string &urdf_str) {
     // register actuator interfaces to the hardware so that other layers can find the interfaces
-    hw.registerInterface(&state_iface_);
-    hw.registerInterface(&cmd_iface_);
+    if (!hw.get< hi::ActuatorStateInterface >()) {
+      hw.registerInterface(&getStateInterface());
+    }
+    hi::ActuatorStateInterface &state_iface(*hw.get< hi::ActuatorStateInterface >());
+    if (!hw.get< CommandInterface >()) {
+      hw.registerInterface(&getCommandInterface());
+    }
+    CommandInterface &cmd_iface(*hw.get< CommandInterface >());
 
-    // parse transmission info from URDF to populate actuator names in it
-    std::vector< ti::TransmissionInfo > trans_infos;
-    if (!ti::TransmissionParser::parse(urdf_str, trans_infos)) {
-      ROS_ERROR("DummyActuatorLayer::init(): Failed to parse transmissions from URDF");
+    // get actuator names from param
+    std::vector< std::string > ator_names;
+    if (!param_nh.getParam("actuators", ator_names)) {
+      ROS_ERROR_STREAM("DummyActuatorLayer::init(): Failed to get param '"
+                       << param_nh.resolveName("actuators") << "'");
       return false;
     }
 
     // register all actuators defined in URDF
-    BOOST_FOREACH (const ti::TransmissionInfo &trans_info, trans_infos) {
-      BOOST_FOREACH (const ti::ActuatorInfo &ator_info, trans_info.actuators_) {
-        ActuatorData &data(data_map_[ator_info.name_]);
-        data.pos = 0.;
-        data.vel = 0.;
-        data.eff = 0.;
-        data.cmd = 0.;
+    BOOST_FOREACH (const std::string &ator_name, ator_names) {
+      ActuatorData &data(data_map_[ator_name]);
+      data.pos = 0.;
+      data.vel = 0.;
+      data.eff = 0.;
+      data.cmd = 0.;
 
-        const hi::ActuatorStateHandle state_handle(ator_info.name_, &data.pos, &data.vel,
-                                                   &data.eff);
-        state_iface_.registerHandle(state_handle);
+      const hi::ActuatorStateHandle state_handle(ator_name, &data.pos, &data.vel, &data.eff);
+      state_iface.registerHandle(state_handle);
 
-        const CommandHandle cmd_handle(state_handle, &data.cmd);
-        cmd_iface_.registerHandle(cmd_handle);
+      const CommandHandle cmd_handle(state_handle, &data.cmd);
+      cmd_iface.registerHandle(cmd_handle);
 
-        ROS_INFO_STREAM("DummyActuatorLayer::init(): Initialized the actuator '" << ator_info.name_
-                                                                                 << "'");
-      }
+      ROS_INFO_STREAM("DummyActuatorLayer::init(): Initialized the actuator '" << ator_name << "'");
     }
 
     return true;
@@ -82,13 +85,22 @@ public:
   }
 
 private:
+  static hi::ActuatorStateInterface &getStateInterface() {
+    static hi::ActuatorStateInterface state_iface;
+    return state_iface;
+  }
+
+  static CommandInterface &getCommandInterface() {
+    static CommandInterface cmd_iface;
+    return cmd_iface;
+  }
+
+private:
   struct ActuatorData {
     double pos, vel, eff, cmd;
   };
   typedef std::map< std::string, ActuatorData > ActuatorDataMap;
 
-  hi::ActuatorStateInterface state_iface_;
-  CommandInterface cmd_iface_;
   ActuatorDataMap data_map_;
 };
 
