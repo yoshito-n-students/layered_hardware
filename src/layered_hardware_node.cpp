@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
-  ros::Rate rate(pnh.param("control_frequency", 10));
+  ros::Rate rate(pnh.param("control_frequency", 10.));
   // workaround for clock-jump in some environments
   const bool use_expected_period(pnh.param("use_expected_period", false));
   ros::Time prev_time(ros::Time::now());
