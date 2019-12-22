@@ -9,13 +9,17 @@
             control_frequency: 20
             use_expected_period: true
             # upper (controller-side) to bottom (actuator-side)
-            layers: [ joint_limits_layer, transmission_layer, actuator_layer ]
+            layers: [ joint_limits_layer, transmission_layer, position_actuator_layer, effort_actuator_layer ]
             joint_limits_layer:
                 type: layered_hardware/JointLimitsLayer
             transmission_layer:
                 type: layered_hardware/TransmissionLayer
-            actuator_layer:
+            position_actuator_layer:
                 type: layered_hardware/DummyPositionActuatorLayer
+                actuators: [ shoulder_actuator, elbow_actuator ]
+            effort_actuator_layer:
+                type: layered_hardware/DummyEffortActuatorLayer
+                actuators: [ wrist_actuator ]
         </rosparam>
     </node>
 
@@ -31,7 +35,7 @@
             type: position_controllers/JointPositionController
             joint: elbow
         wrist_controller:
-            type: position_controllers/JointPositionController
+            type: effort_controllers/JointEffortController
             joint: wrist
     </rosparam>
 

@@ -55,7 +55,7 @@
     <transmission name="wrist_trans">
         <type>transmission_interface/SimpleTransmission</type>
         <joint name="wrist">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
         </joint>
         <actuator name="wrist_actuator">
             <mechanicalReduction>1</mechanicalReduction>
