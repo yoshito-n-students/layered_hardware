@@ -8,12 +8,16 @@ A ros_control implementation that adopts layered scheme
 
 **~use_expected_period** (bool, default: false)
 * if true, the node uses the expected control cycle time instead of the actual when reading from/writing from the layers
+* useful as workaround for clock jump
 
 **~layers** (string array, required)
 * names of layers from upper (controller-side) to bottom (actuator-side)
 
 **~<layer_name>/type** (string, required)
 * lookup name for each layer plugin like 'layered_hardware/TransmissionLayer'
+
+### Example
+see [launch/example.launch](launch/example.launch)
 
 ## Plugins: layered_hardware_default_plugins
 ### layered_hardware/JointLimitsLayer
