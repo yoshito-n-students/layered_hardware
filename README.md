@@ -33,9 +33,8 @@ see [launch/example.launch](launch/example.launch)
 * names of actuators to be managed by this layer
 
 ## Related packages
-**layered_hardware_dynamixel**
+**[layered_hardware_dynamixel](https://github.com/yoshito-n-students/layered_hardware_dynamixel)**
 * layer implementation for ROBOTIS Dynamixel actuators
-* coming soon
 
 **layered_hardware_epos**
 * layer implementation for MAXOS EPOS actuator dirvers
