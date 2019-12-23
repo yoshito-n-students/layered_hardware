@@ -1,6 +1,12 @@
 # layered_hardware
 A ros_control implementation that adopts layered scheme
 
+## The layered scheme
+* each ros_control's components (ex. joint_limits, transmissions) are implemented as a layer plugin (base_class: [layered_hardware::LayerBase](include/layered_hardware/layer_base.hpp))
+* one can reuse same implementation of non-actuator-specific layers
+
+![](https://raw.githubusercontent.com/yoshito-n-students/layered_hardware/images/images/layered_scheme.png)
+
 ## Node: layered_hardware_node
 ### Parameters
 **~control_frequency** (double, default: 10.0)
