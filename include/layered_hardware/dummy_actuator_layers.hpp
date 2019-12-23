@@ -79,7 +79,7 @@ public:
     }
   }
 
-private:
+protected:
   // makes an interface registered & returns the registered interface.
   // if newly register an interface, it will be allocated in the static memory space
   // so that other plugins can modify it.
@@ -91,7 +91,7 @@ private:
     return hw->get< Interface >();
   }
 
-private:
+protected:
   struct ActuatorData {
     double pos, vel, eff, cmd;
   };

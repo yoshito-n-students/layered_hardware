@@ -73,7 +73,7 @@ public:
     eff_iface_.enforceLimits(period);
   }
 
-private:
+protected:
   template < typename CommandInterface, typename SaturationHandle, typename SaturationInterface >
   void tieJointsAndLimits(hi::RobotHW *const hw, const urdf::Model &urdf_model,
                           SaturationInterface *const sat_iface) {
@@ -103,7 +103,7 @@ private:
     }
   }
 
-private:
+protected:
   jli::PositionJointSaturationInterface pos_iface_;
   jli::VelocityJointSaturationInterface vel_iface_;
   jli::EffortJointSaturationInterface eff_iface_;

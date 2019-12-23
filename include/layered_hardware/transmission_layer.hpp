@@ -96,7 +96,7 @@ public:
     propagate< ti::JointToActuatorEffortInterface >();
   }
 
-private:
+protected:
   template < typename Interface > void propagate() {
     Interface *const iface(transmissions_.get< Interface >());
     if (iface) {
@@ -104,7 +104,7 @@ private:
     }
   }
 
-private:
+protected:
   ti::RobotTransmissions transmissions_;
   boost::scoped_ptr< ti::TransmissionInterfaceLoader > iface_loader_;
 };
