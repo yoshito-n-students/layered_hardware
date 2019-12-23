@@ -2,7 +2,7 @@
 A ros_control implementation that adopts layered scheme
 
 ## The layered scheme
-* each ros_control's component (ex. joint_limits, transmissions) is implemented as a layer plugin (base_class: [layered_hardware::LayerBase](include/layered_hardware/layer_base.hpp))
+* every ros_control's component (ex. joint_limits, transmissions) is implemented as a layer plugin (base_class: [layered_hardware::LayerBase](include/layered_hardware/layer_base.hpp))
 * one can reuse plugins of non-actuator-specific layers for different actuators
 
 ![](https://raw.githubusercontent.com/yoshito-n-students/layered_hardware/images/images/layered_scheme.png)
@@ -13,7 +13,7 @@ ___~control_frequency___ (double, default: 10.0)
 * frequency of control step (reading from the layers, updating the controllers, and writing to the layers) in Hz
 
 ___~use_expected_period___ (bool, default: false)
-* if true, the node uses the expected control cycle time instead of the actual when reading from/writing from the layers
+* if true, the node uses the expected control cycle time instead of the actual when reading from/writing to the layers
 * useful as workaround for clock jump
 
 ___~layers___ (string array, required)
@@ -27,11 +27,11 @@ see [launch/example.launch](launch/example.launch)
 
 ## Plugins: layered_hardware_default_plugins
 ### layered_hardware/JointLimitsLayer
-* implements general joint_limits_interface scheme
+* implements general joint_limits_interface procedures
 * supports only hard lmits. will support soft limits soon.
 
 ### layered_hardware/TransmissionLayer
-* implements general transmission_interface scheme
+* implements general transmission_interface procedures
 
 ### layered_hardware/Dummy{Position, Velocity, Effort}ActuatorLayer
 * implements dummy {position, velocity, effort}-controlled actuators
@@ -45,4 +45,4 @@ ___~<layer_name>/actuators___ (string array, required)
 * layer implementation for ROBOTIS Dynamixel actuators
 
 **layered_hardware_epos**
-* layer implementation for MAXOS EPOS actuator dirvers (coming soon)
+* layer implementation for MAXON EPOS actuator dirvers (coming soon)
