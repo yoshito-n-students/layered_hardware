@@ -41,6 +41,9 @@ ___~<layer_name>/actuators___ (string array, required)
 * names of actuators to be managed by this layer
 
 ## Related packages
+**[layered_hardware_extensions](https://github.com/yoshito-n-students/layered_hardware_extensions)**
+* extended layers for position-velocity(-effort)-controlled actuators
+
 **[layered_hardware_dynamixel](https://github.com/yoshito-n-students/layered_hardware_dynamixel)**
 * layer implementation for ROBOTIS Dynamixel actuators
 
