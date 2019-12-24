@@ -17,22 +17,28 @@
 #include <ros/names.h>
 #include <ros/node_handle.h>
 #include <ros/time.h>
-#include <transmission_interface/transmission_info.h>
-#include <transmission_interface/transmission_parser.h>
 
 #include <boost/foreach.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 
 namespace layered_hardware {
 
-template < typename CommandInterface, typename CommandHandle, typename CommandWriter >
-class DummyActuatorLayer : public LayerBase {
+struct DummyActuatorData {
+  DummyActuatorData() : pos(0.), vel(0.), eff(0.), pos_cmd(0.), vel_cmd(0.), eff_cmd(0.) {}
+  double pos, vel, eff, pos_cmd, vel_cmd, eff_cmd;
+};
+
+template < typename CommandWriter > class DummyActuatorLayer : public LayerBase {
 public:
   virtual bool init(hi::RobotHW *const hw, const ros::NodeHandle &param_nh,
                     const std::string &urdf_str) {
     // register actuator interfaces to the hardware so that other layers can find the interfaces
     hi::ActuatorStateInterface &state_iface(*makeRegistered< hi::ActuatorStateInterface >(hw));
-    CommandInterface &cmd_iface(*makeRegistered< CommandInterface >(hw));
+    hi::PositionActuatorInterface &pos_cmd_iface(
+        *makeRegistered< hi::PositionActuatorInterface >(hw));
+    hi::VelocityActuatorInterface &vel_cmd_iface(
+        *makeRegistered< hi::VelocityActuatorInterface >(hw));
+    hi::EffortActuatorInterface &eff_cmd_iface(*makeRegistered< hi::EffortActuatorInterface >(hw));
 
     // get actuator names from param
     std::vector< std::string > ator_names;
@@ -44,17 +50,13 @@ public:
 
     // register all actuators defined in URDF
     BOOST_FOREACH (const std::string &ator_name, ator_names) {
-      ActuatorData &data(data_map_[ator_name]);
-      data.pos = 0.;
-      data.vel = 0.;
-      data.eff = 0.;
-      data.cmd = 0.;
+      DummyActuatorData &data(data_map_[ator_name]);
 
       const hi::ActuatorStateHandle state_handle(ator_name, &data.pos, &data.vel, &data.eff);
       state_iface.registerHandle(state_handle);
-
-      const CommandHandle cmd_handle(state_handle, &data.cmd);
-      cmd_iface.registerHandle(cmd_handle);
+      pos_cmd_iface.registerHandle(hi::ActuatorHandle(state_handle, &data.pos_cmd));
+      vel_cmd_iface.registerHandle(hi::ActuatorHandle(state_handle, &data.vel_cmd));
+      eff_cmd_iface.registerHandle(hi::ActuatorHandle(state_handle, &data.eff_cmd));
 
       ROS_INFO_STREAM("DummyActuatorLayer::init(): Initialized the actuator '" << ator_name << "'");
     }
@@ -74,8 +76,7 @@ public:
   virtual void write(const ros::Time &time, const ros::Duration &period) {
     // write to all actuators
     BOOST_FOREACH (typename ActuatorDataMap::value_type &data, data_map_) {
-      CommandWriter::write(&data.second.pos, &data.second.vel, &data.second.eff, data.second.cmd,
-                           period);
+      CommandWriter::write(&data.second, period);
     }
   }
 
@@ -92,62 +93,46 @@ protected:
   }
 
 protected:
-  struct ActuatorData {
-    double pos, vel, eff, cmd;
-  };
-  typedef std::map< std::string, ActuatorData > ActuatorDataMap;
-
+  typedef std::map< std::string, DummyActuatorData > ActuatorDataMap;
   ActuatorDataMap data_map_;
 };
 
 // command writers
 
-struct ActuatorPositionCommandWriter {
-  static void write(double *pos, double *vel, double *eff, const double pos_cmd,
-                    const ros::Duration &period) {
-    if (!boost::math::isnan(pos_cmd)) {
-      *vel = (pos_cmd - *pos) / period.toSec();
-      *pos = pos_cmd;
-      *eff = 0.;
+struct DummyActuatorPositionCommandWriter {
+  static void write(DummyActuatorData *const data, const ros::Duration &period) {
+    if (!boost::math::isnan(data->pos_cmd)) {
+      data->vel = (data->pos_cmd - data->pos) / period.toSec();
+      data->pos = data->pos_cmd;
+      data->eff = 0.;
     }
   }
 };
 
-struct ActuatorVelocityCommandWriter {
-  static void write(double *pos, double *vel, double *eff, const double vel_cmd,
-                    const ros::Duration &period) {
-    if (!boost::math::isnan(vel_cmd)) {
-      *pos += vel_cmd * period.toSec();
-      *vel = vel_cmd;
-      *eff = 0.;
+struct DummyActuatorVelocityCommandWriter {
+  static void write(DummyActuatorData *const data, const ros::Duration &period) {
+    if (!boost::math::isnan(data->vel_cmd)) {
+      data->pos += data->vel_cmd * period.toSec();
+      data->vel = data->vel_cmd;
+      data->eff = 0.;
     }
   }
 };
 
-struct ActuatorEffortCommandWriter {
-  static void write(double *pos, double *vel, double *eff, const double eff_cmd,
-                    const ros::Duration &period) {
-    if (!boost::math::isnan(eff_cmd)) {
-      *pos = 0.;
-      *vel = 0.;
-      *eff = eff_cmd;
+struct DummyActuatorEffortCommandWriter {
+  static void write(DummyActuatorData *const data, const ros::Duration &period) {
+    if (!boost::math::isnan(data->eff_cmd)) {
+      data->pos = 0.;
+      data->vel = 0.;
+      data->eff = data->eff_cmd;
     }
   }
 };
 
 // layer definitions
-
-typedef DummyActuatorLayer< hi::PositionActuatorInterface, hi::ActuatorHandle,
-                            ActuatorPositionCommandWriter >
-    DummyPositionActuatorLayer;
-
-typedef DummyActuatorLayer< hi::VelocityActuatorInterface, hi::ActuatorHandle,
-                            ActuatorVelocityCommandWriter >
-    DummyVelocityActuatorLayer;
-
-typedef DummyActuatorLayer< hi::EffortActuatorInterface, hi::ActuatorHandle,
-                            ActuatorEffortCommandWriter >
-    DummyEffortActuatorLayer;
+typedef DummyActuatorLayer< DummyActuatorPositionCommandWriter > DummyPositionActuatorLayer;
+typedef DummyActuatorLayer< DummyActuatorVelocityCommandWriter > DummyVelocityActuatorLayer;
+typedef DummyActuatorLayer< DummyActuatorEffortCommandWriter > DummyEffortActuatorLayer;
 } // namespace layered_hardware
 
 #endif
