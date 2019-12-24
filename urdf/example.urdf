@@ -8,6 +8,7 @@
         <origin xyz="0 0 0" />
         <parent link="body" />
         <child link="upper_arm" />
+        <axis xyz="0 -1 0" />
         <limit lower="0" upper="3.14" effort="10.0" velocity="1.0" />
     </joint>
 
@@ -29,6 +30,7 @@
         <origin xyz="0.2 0 0" />
         <parent link="upper_arm" />
         <child link="forearm" />
+        <axis xyz="0 -1 0" />
     </joint>
 
     <transmission name="elbow_trans">
@@ -49,6 +51,7 @@
         <origin xyz="0.2 0 0" />
         <parent link="forearm" />
         <child link="hand" />
+        <axis xyz="0 -1 0" />
         <limit lower="-1.0" upper="1.0" effort="10.0" velocity="1.0" />
     </joint>
 
