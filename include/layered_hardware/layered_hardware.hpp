@@ -87,6 +87,17 @@ public:
     return true;
   }
 
+  virtual bool prepareSwitch(const std::list< hi::ControllerInfo > &start_list,
+                             const std::list< hi::ControllerInfo > &stop_list) {
+    // ask each layers if stopping/starting given controllers is possible
+    BOOST_REVERSE_FOREACH(const LayerPtr &layer, layers_) {
+      if (!layer->prepareSwitch(start_list, stop_list)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   virtual void doSwitch(const std::list< hi::ControllerInfo > &start_list,
                         const std::list< hi::ControllerInfo > &stop_list) {
     // do something required on just before switching controllers

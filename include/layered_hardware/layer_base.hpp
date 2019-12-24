@@ -20,6 +20,9 @@ public:
   virtual bool init(hi::RobotHW *const hw, const ros::NodeHandle &param_nh,
                     const std::string &urdf_str) = 0;
 
+  virtual bool prepareSwitch(const std::list< hi::ControllerInfo > &start_list,
+                             const std::list< hi::ControllerInfo > &stop_list) = 0;
+
   virtual void doSwitch(const std::list< hi::ControllerInfo > &start_list,
                         const std::list< hi::ControllerInfo > &stop_list) = 0;
 

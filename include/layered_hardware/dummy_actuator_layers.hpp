@@ -64,6 +64,12 @@ public:
     return true;
   }
 
+  virtual bool prepareSwitch(const std::list< hi::ControllerInfo > &start_list,
+                             const std::list< hi::ControllerInfo > &stop_list) {
+    // always ready to switch
+    return true;
+  }
+
   virtual void doSwitch(const std::list< hi::ControllerInfo > &start_list,
                         const std::list< hi::ControllerInfo > &stop_list) {
     // nothing to do
