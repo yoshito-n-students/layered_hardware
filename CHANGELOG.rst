@@ -2,6 +2,11 @@
 Changelog for package layered_hardware
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.0.2 (2019-12-24)
+------------------
+* Refactored layers
+* Updated README
+
 0.0.1 (2019-12-13)
 ------------------
 * Initial version
