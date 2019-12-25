@@ -28,7 +28,7 @@ see [launch/example.launch](launch/example.launch)
 ## Plugins: layered_hardware_default_plugins
 ### layered_hardware/JointLimitsLayer
 * implements general joint_limits_interface procedures
-* supports only hard lmits. will support soft limits soon.
+* supports both hard & soft limits
 
 ### layered_hardware/TransmissionLayer
 * implements general transmission_interface procedures
