@@ -2,6 +2,10 @@
 Changelog for package layered_hardware
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.0.4 (2019-12-25)
+------------------
+* Support soft joint limits
+
 0.0.3 (2019-12-25)
 ------------------
 * Updated example
