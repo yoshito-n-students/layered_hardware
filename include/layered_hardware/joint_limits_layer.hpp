@@ -46,13 +46,16 @@ public:
 
     // associate joints already registered in the joint interface of the hardware
     // and joint limits loaded from the URDF.
-    // associated pairs will be stored in the limits interface.
-    tieJointsAndLimits< hi::PositionJointInterface, jli::PositionJointSaturationHandle >(
-        hw, urdf_model, &pos_iface_);
-    tieJointsAndLimits< hi::VelocityJointInterface, jli::VelocityJointSaturationHandle >(
-        hw, urdf_model, &vel_iface_);
-    tieJointsAndLimits< hi::EffortJointInterface, jli::EffortJointSaturationHandle >(hw, urdf_model,
-                                                                                     &eff_iface_);
+    // associated pairs will be stored in the local limits interface.
+    tieJointsAndLimits< hi::PositionJointInterface, jli::PositionJointSaturationHandle,
+                        jli::PositionJointSoftLimitsHandle >(hw, urdf_model, &pos_iface_,
+                                                             &pos_soft_iface_);
+    tieJointsAndLimits< hi::VelocityJointInterface, jli::VelocityJointSaturationHandle,
+                        jli::VelocityJointSoftLimitsHandle >(hw, urdf_model, &vel_iface_,
+                                                             &vel_soft_iface_);
+    tieJointsAndLimits< hi::EffortJointInterface, jli::EffortJointSaturationHandle,
+                        jli::EffortJointSoftLimitsHandle >(hw, urdf_model, &eff_iface_,
+                                                           &eff_soft_iface_);
 
     return true;
   }
@@ -77,12 +80,17 @@ public:
     pos_iface_.enforceLimits(period);
     vel_iface_.enforceLimits(period);
     eff_iface_.enforceLimits(period);
+    pos_soft_iface_.enforceLimits(period);
+    vel_soft_iface_.enforceLimits(period);
+    eff_soft_iface_.enforceLimits(period);
   }
 
 protected:
-  template < typename CommandInterface, typename SaturationHandle, typename SaturationInterface >
+  template < typename CommandInterface, typename SaturationHandle, typename SoftLimitsHandle,
+             typename SaturationInterface, typename SoftLimitsInterface >
   void tieJointsAndLimits(hi::RobotHW *const hw, const urdf::Model &urdf_model,
-                          SaturationInterface *const sat_iface) {
+                          SaturationInterface *const sat_iface,
+                          SoftLimitsInterface *const soft_iface) {
     // find joint command interface that joints have been registered
     CommandInterface *const cmd_iface(hw->get< CommandInterface >());
     if (!cmd_iface) {
@@ -92,20 +100,32 @@ protected:
     // associate joints already registered and limits in the given URDF
     const std::vector< std::string > hw_jnt_names(cmd_iface->getNames());
     BOOST_FOREACH (const std::string &hw_jnt_name, hw_jnt_names) {
-      // find limits of a joint
+      // find a joint from URDF
       const urdf::JointConstSharedPtr urdf_jnt(urdf_model.getJoint(hw_jnt_name));
       if (!urdf_jnt) {
         continue;
       }
+      // find hard limits for the joint
       jli::JointLimits limits;
       if (!jli::getJointLimits(urdf_jnt, limits)) {
         continue;
       }
-      // register new associated pair
+      // associate the joint and hard limits
       ROS_INFO_STREAM("JointLimitsLayer::init(): Initialized the joint limits ("
                       << hi::internal::demangledTypeName< SaturationHandle >()
                       << ") for the joint '" << hw_jnt_name << "'");
       sat_iface->registerHandle(SaturationHandle(cmd_iface->getHandle(hw_jnt_name), limits));
+      // find soft limits for the joint
+      jli::SoftJointLimits soft_limits;
+      if (!jli::getSoftJointLimits(urdf_jnt, soft_limits)) {
+        continue;
+      }
+      // associate the joint and soft limits
+      ROS_INFO_STREAM("JointLimitsLayer::init(): Initialized the soft joint limits ("
+                      << hi::internal::demangledTypeName< SoftLimitsHandle >()
+                      << ") for the joint '" << hw_jnt_name << "'");
+      soft_iface->registerHandle(
+          SoftLimitsHandle(cmd_iface->getHandle(hw_jnt_name), limits, soft_limits));
     }
   }
 
@@ -113,6 +133,10 @@ protected:
   jli::PositionJointSaturationInterface pos_iface_;
   jli::VelocityJointSaturationInterface vel_iface_;
   jli::EffortJointSaturationInterface eff_iface_;
+
+  jli::PositionJointSoftLimitsInterface pos_soft_iface_;
+  jli::VelocityJointSoftLimitsInterface vel_soft_iface_;
+  jli::EffortJointSoftLimitsInterface eff_soft_iface_;
 };
 } // namespace layered_hardware
 
