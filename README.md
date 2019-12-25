@@ -47,5 +47,5 @@ ___~<layer_name>/actuators___ (string array, required)
 **[layered_hardware_dynamixel](https://github.com/yoshito-n-students/layered_hardware_dynamixel)**
 * layer implementation for ROBOTIS Dynamixel actuators
 
-**layered_hardware_epos**
-* layer implementation for MAXON EPOS actuator dirvers (coming soon)
+**[layered_hardware_epos](https://github.com/yoshito-n-students/layered_hardware_epos)**
+* layer implementation for maxon EPOS actuator controllers (coming soon)
