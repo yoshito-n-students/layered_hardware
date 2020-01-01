@@ -16,6 +16,10 @@ ___~use_expected_period___ (bool, default: false)
 * if true, the node uses the expected control cycle time instead of the actual when reading from/writing to the layers
 * useful as workaround for clock jump
 
+___~robot_description___ or ___robot_description___ (string, default: "")
+* robot description in URDF
+* if both given, ___~robot_description___ will be used
+
 ___~layers___ (string array, required)
 * names of layers from upper (controller-side) to bottom (actuator-side)
 

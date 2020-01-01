@@ -35,11 +35,12 @@ public:
     std::string urdf_str;
     if (!param_nh.getParam("robot_description", urdf_str) &&
         !rp::get("robot_description", urdf_str)) {
-      ROS_ERROR_STREAM(
+      ROS_WARN_STREAM(
           "LayeredHardware::init(): Failed to get URDF description from params neither '"
           << param_nh.resolveName("robot_description") << "' nor '"
-          << rn::resolve("robot_description") << "'");
-      return false;
+          << rn::resolve("robot_description")
+          << "'. Every layers will be initialized with empty string.");
+      // continue because layers may not require robot description
     }
 
     // get layer names from param
