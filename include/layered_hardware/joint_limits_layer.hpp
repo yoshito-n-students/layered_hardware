@@ -9,6 +9,7 @@
 #include <hardware_interface/joint_command_interface.h>
 #include <hardware_interface/posvel_command_interface.h>
 #include <hardware_interface/robot_hw.h>
+#include <joint_limits_interface/joint_limits.h>
 #include <joint_limits_interface/joint_limits_interface.h>
 #include <joint_limits_interface/joint_limits_urdf.h>
 #include <layered_hardware/common_namespaces.hpp>
