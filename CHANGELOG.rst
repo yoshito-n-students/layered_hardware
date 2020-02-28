@@ -2,6 +2,11 @@
 Changelog for package layered_hardware
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.0.5 (2020-02-28)
+------------------
+* Enable a link to layered_hardware_epos in README
+* Make robot description optional
+
 0.0.4 (2019-12-25)
 ------------------
 * Support soft joint limits
