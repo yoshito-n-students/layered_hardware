@@ -117,6 +117,12 @@ public:
     BOOST_FOREACH (const LayerPtr &layer, layers_) { layer->write(time, period); }
   }
 
+  std::size_t size() const { return layers_.size(); }
+
+  LayerPtr layer(const std::size_t i) { return layers_[i]; }
+
+  LayerConstPtr layer(const std::size_t i) const { return layers_[i]; }
+
 private:
   pluginlib::ClassLoader< LayerBase > layer_loader_;
   std::vector< LayerPtr > layers_;
