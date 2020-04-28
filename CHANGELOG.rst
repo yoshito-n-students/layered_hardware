@@ -2,6 +2,11 @@
 Changelog for package layered_hardware
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.0.6 (2020-04-28)
+------------------
+* Add accessor methods to layers (LayeredHardware::{size(), layer()})
+* Add link to layered_hardware_gazebo package in README
+
 0.0.5 (2020-02-28)
 ------------------
 * Enable a link to layered_hardware_epos in README
