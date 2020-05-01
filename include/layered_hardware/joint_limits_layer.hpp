@@ -69,7 +69,10 @@ public:
 
   virtual void doSwitch(const std::list< hi::ControllerInfo > &start_list,
                         const std::list< hi::ControllerInfo > &stop_list) {
-    // nothing to do
+    // reset position-based joint limits
+    // because new position-based controllers may be starting
+    pos_iface_.reset();
+    pos_soft_iface_.reset();
   }
 
   virtual void read(const ros::Time &time, const ros::Duration &period) {
