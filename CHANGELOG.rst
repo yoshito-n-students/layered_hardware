@@ -2,6 +2,10 @@
 Changelog for package layered_hardware
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.0.7 (2020-05-03)
+------------------
+* Reset position-based joint limits when switching controllers
+
 0.0.6 (2020-04-28)
 ------------------
 * Add accessor methods to layers (LayeredHardware::{size(), layer()})
