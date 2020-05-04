@@ -2,6 +2,10 @@
 Changelog for package layered_hardware
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.0.8 (2020-05-05)
+------------------
+* Refactor LayeredHardware to be used as a parent class
+
 0.0.7 (2020-05-03)
 ------------------
 * Reset position-based joint limits when switching controllers
