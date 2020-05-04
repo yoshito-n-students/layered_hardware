@@ -28,18 +28,11 @@ public:
   virtual ~LayeredHardware() {}
 
   bool init(const ros::NodeHandle &param_nh) {
-    namespace rn = ros::names;
-    namespace rp = ros::param;
-
     // get URDF description from param
-    std::string urdf_str;
-    if (!param_nh.getParam("robot_description", urdf_str) &&
-        !rp::get("robot_description", urdf_str)) {
-      ROS_WARN_STREAM(
-          "LayeredHardware::init(): Failed to get URDF description from params neither '"
-          << param_nh.resolveName("robot_description") << "' nor '"
-          << rn::resolve("robot_description")
-          << "'. Every layers will be initialized with empty string.");
+    const std::string urdf_str(getURDFStr(param_nh));
+    if (urdf_str.empty()) {
+      ROS_WARN("LayeredHardware::init(): Failed to get URDF description. "
+               "Every layers will be initialized with empty string.");
       // continue because layers may not require robot description
     }
 
@@ -59,7 +52,10 @@ public:
     // load & init layer instances from bottom (actuator-side) to upper (controller-side)
     layers_.resize(layer_names.size());
     for (int i = layers_.size() - 1; i >= 0; --i) {
-      const ros::NodeHandle layer_param_nh(param_nh, layer_names[i]);
+      const std::string &layer_name(layer_names[i]);
+      LayerPtr &layer(layers_[i]);
+      const ros::NodeHandle layer_param_nh(param_nh, layer_name);
+
       // get layer's typename from param
       std::string lookup_name;
       if (!layer_param_nh.getParam("type", lookup_name)) {
@@ -67,22 +63,16 @@ public:
                          << layer_param_nh.resolveName("type") << "'");
         return false;
       }
+
       // create a layer instance by typename
-      try {
-        layers_[i] = layer_loader_.createInstance(lookup_name);
-      } catch (const pluginlib::PluginlibException &ex) {
-        ROS_ERROR_STREAM(
-            "LayeredHardware::init(): Failed to create a layer instance by the lookup name '"
-            << lookup_name << "': " << ex.what());
+      layer = loadLayer(lookup_name, layer_param_nh, urdf_str);
+      if (!layer) {
+        ROS_ERROR_STREAM("LayeredHardware::init(): Failed to load the layer '" << layer_name
+                                                                               << "'");
         return false;
       }
-      // init the layer
-      if (!layers_[i]->init(this, layer_param_nh, urdf_str)) {
-        ROS_ERROR_STREAM("LayeredHardware::init(): Failed to initialize the layer '"
-                         << layer_names[i] << "'");
-        return false;
-      }
-      ROS_INFO_STREAM("LayeredHardware::init(): Initialized the layer '" << layer_names[i] << "'");
+
+      ROS_INFO_STREAM("LayeredHardware::init(): Initialized the layer '" << layer_name << "'");
     }
 
     return true;
@@ -123,7 +113,43 @@ public:
 
   LayerConstPtr layer(const std::size_t i) const { return layers_[i]; }
 
-private:
+protected:
+  static std::string getURDFStr(const ros::NodeHandle &param_nh) {
+    std::string urdf_str;
+    if (!param_nh.getParam("robot_description", urdf_str) &&
+        !ros::param::get("robot_description", urdf_str)) {
+      ROS_WARN_STREAM(
+          "LayeredHardware::getURDFStr(): Failed to get URDF description from params neither '"
+          << param_nh.resolveName("robot_description") << "' nor '"
+          << ros::names::resolve("robot_description"));
+      return std::string();
+    }
+    return urdf_str;
+  }
+
+  LayerPtr loadLayer(const std::string &lookup_name, const ros::NodeHandle &param_nh,
+                     const std::string &urdf_str) {
+    LayerPtr layer;
+
+    // create a layer by typename
+    try {
+      layer = layer_loader_.createInstance(lookup_name);
+    } catch (const pluginlib::PluginlibException &ex) {
+      ROS_ERROR_STREAM("LayeredHardware::loadLayer(): Failed to create a layer by the lookup name '"
+                       << lookup_name << "': " << ex.what());
+      return LayerPtr();
+    }
+
+    // init the layer
+    if (!layer->init(this, param_nh, urdf_str)) {
+      ROS_ERROR_STREAM("LayeredHardware::loadLayer(): Failed to initialize a layer");
+      return LayerPtr();
+    }
+
+    return layer;
+  }
+
+protected:
   pluginlib::ClassLoader< LayerBase > layer_loader_;
   std::vector< LayerPtr > layers_;
 };
