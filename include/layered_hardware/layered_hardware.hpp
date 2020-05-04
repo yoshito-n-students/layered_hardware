@@ -25,7 +25,11 @@ class LayeredHardware : public hi::RobotHW {
 public:
   LayeredHardware() : layer_loader_("layered_hardware", "layered_hardware::LayerBase") {}
 
-  virtual ~LayeredHardware() {}
+  virtual ~LayeredHardware() {
+    // before destructing layer loader,
+    // deallocate layers which were created by plugins or loader cannot unload plugins
+    layers_.clear();
+  }
 
   bool init(const ros::NodeHandle &param_nh) {
     // get URDF description from param
