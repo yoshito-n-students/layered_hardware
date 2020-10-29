@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <list>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -20,9 +21,6 @@
 #include <transmission_interface/transmission_interface.h>
 #include <transmission_interface/transmission_interface_loader.h>
 #include <transmission_interface/transmission_parser.h>
-
-#include <boost/foreach.hpp>
-#include <boost/scoped_ptr.hpp>
 
 namespace layered_hardware {
 
@@ -47,10 +45,10 @@ public:
 
     // load all transmissions for actuators in the hardware
     iface_loader_.reset(new ti::TransmissionInterfaceLoader(hw, &transmissions_));
-    BOOST_FOREACH (const ti::TransmissionInfo &info, infos) {
+    for (const ti::TransmissionInfo &info: infos) {
       // confirm the transmission is for some of actuators in the hardware
       bool has_non_hw_ator(false);
-      BOOST_FOREACH (const ti::ActuatorInfo &ator_info, info.actuators_) {
+      for (const ti::ActuatorInfo &ator_info: info.actuators_) {
         if (std::find(hw_ator_names.begin(), hw_ator_names.end(), ator_info.name_) ==
             hw_ator_names.end()) {
           has_non_hw_ator = true;
@@ -112,7 +110,7 @@ protected:
 
 protected:
   ti::RobotTransmissions transmissions_;
-  boost::scoped_ptr< ti::TransmissionInterfaceLoader > iface_loader_;
+  std::unique_ptr< ti::TransmissionInterfaceLoader > iface_loader_;
 };
 } // namespace layered_hardware
 

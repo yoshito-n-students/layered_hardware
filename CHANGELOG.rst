@@ -2,6 +2,10 @@
 Changelog for package layered_hardware
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.0.9 (2020-XX-XX)
+------------------
+* c++11
+
 0.0.8 (2020-05-05)
 ------------------
 * Refactor LayeredHardware to be used as a parent class

@@ -1,6 +1,7 @@
 #ifndef LAYERED_HARDWARE_DUMMY_ACTUATOR_LAYERS_HPP
 #define LAYERED_HARDWARE_DUMMY_ACTUATOR_LAYERS_HPP
 
+#include <cmath>
 #include <list>
 #include <map>
 #include <string>
@@ -17,9 +18,6 @@
 #include <ros/names.h>
 #include <ros/node_handle.h>
 #include <ros/time.h>
-
-#include <boost/foreach.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
 
 namespace layered_hardware {
 
@@ -49,7 +47,7 @@ public:
     }
 
     // register all actuators defined in URDF
-    BOOST_FOREACH (const std::string &ator_name, ator_names) {
+    for (const std::string &ator_name : ator_names) {
       DummyActuatorData &data(data_map_[ator_name]);
 
       const hi::ActuatorStateHandle state_handle(ator_name, &data.pos, &data.vel, &data.eff);
@@ -81,7 +79,7 @@ public:
 
   virtual void write(const ros::Time &time, const ros::Duration &period) {
     // write to all actuators
-    BOOST_FOREACH (typename ActuatorDataMap::value_type &data, data_map_) {
+    for (typename ActuatorDataMap::value_type &data : data_map_) {
       CommandWriter::write(&data.second, period);
     }
   }
@@ -107,7 +105,7 @@ protected:
 
 struct DummyActuatorPositionCommandWriter {
   static void write(DummyActuatorData *const data, const ros::Duration &period) {
-    if (!boost::math::isnan(data->pos_cmd)) {
+    if (!std::isnan(data->pos_cmd)) {
       data->vel = (data->pos_cmd - data->pos) / period.toSec();
       data->pos = data->pos_cmd;
       data->eff = 0.;
@@ -117,7 +115,7 @@ struct DummyActuatorPositionCommandWriter {
 
 struct DummyActuatorVelocityCommandWriter {
   static void write(DummyActuatorData *const data, const ros::Duration &period) {
-    if (!boost::math::isnan(data->vel_cmd)) {
+    if (!std::isnan(data->vel_cmd)) {
       data->pos += data->vel_cmd * period.toSec();
       data->vel = data->vel_cmd;
       data->eff = 0.;
@@ -127,7 +125,7 @@ struct DummyActuatorVelocityCommandWriter {
 
 struct DummyActuatorEffortCommandWriter {
   static void write(DummyActuatorData *const data, const ros::Duration &period) {
-    if (!boost::math::isnan(data->eff_cmd)) {
+    if (!std::isnan(data->eff_cmd)) {
       data->pos = 0.;
       data->vel = 0.;
       data->eff = data->eff_cmd;

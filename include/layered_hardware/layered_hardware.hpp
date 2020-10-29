@@ -108,7 +108,9 @@ public:
 
   virtual void write(const ros::Time &time, const ros::Duration &period) {
     // write commands to actuators
-    BOOST_FOREACH (const LayerPtr &layer, layers_) { layer->write(time, period); }
+    for (const LayerPtr &layer : layers_) {
+      layer->write(time, period);
+    }
   }
 
   std::size_t size() const { return layers_.size(); }

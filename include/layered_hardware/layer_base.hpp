@@ -42,6 +42,9 @@ protected:
   }
 };
 
+// although this package is compiled as c++11,
+// we still use boost::shared_ptr instead of std::shared_ptr
+// because these pointer types should match returned types of pluginlib.
 typedef boost::shared_ptr< LayerBase > LayerPtr;
 typedef boost::shared_ptr< const LayerBase > LayerConstPtr;
 } // namespace layered_hardware

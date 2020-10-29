@@ -20,8 +20,6 @@
 #include <ros/time.h>
 #include <urdf/model.h>
 
-#include <boost/foreach.hpp>
-
 namespace layered_hardware {
 
 // TODO: support soft limits
@@ -103,7 +101,7 @@ protected:
 
     // associate joints already registered and limits in the given URDF
     const std::vector< std::string > hw_jnt_names(cmd_iface->getNames());
-    BOOST_FOREACH (const std::string &hw_jnt_name, hw_jnt_names) {
+    for (const std::string &hw_jnt_name : hw_jnt_names) {
       // find a joint from URDF
       const urdf::JointConstSharedPtr urdf_jnt(urdf_model.getJoint(hw_jnt_name));
       if (!urdf_jnt) {
