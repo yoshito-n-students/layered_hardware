@@ -2,9 +2,10 @@
 Changelog for package layered_hardware
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.0.9 (2020-XX-XX)
+0.0.9 (2021-02-28)
 ------------------
 * c++11
+* Destruct layer instances before unloading layer plugins
 
 0.0.8 (2020-05-05)
 ------------------
