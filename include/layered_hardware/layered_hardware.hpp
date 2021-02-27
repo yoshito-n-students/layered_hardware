@@ -83,7 +83,7 @@ public:
   }
 
   virtual bool prepareSwitch(const std::list< hi::ControllerInfo > &start_list,
-                             const std::list< hi::ControllerInfo > &stop_list) {
+                             const std::list< hi::ControllerInfo > &stop_list) override {
     // ask each layers if stopping/starting given controllers is possible
     BOOST_REVERSE_FOREACH(const LayerPtr &layer, layers_) {
       if (!layer->prepareSwitch(start_list, stop_list)) {
@@ -94,19 +94,19 @@ public:
   }
 
   virtual void doSwitch(const std::list< hi::ControllerInfo > &start_list,
-                        const std::list< hi::ControllerInfo > &stop_list) {
+                        const std::list< hi::ControllerInfo > &stop_list) override {
     // do something required on just before switching controllers
     BOOST_REVERSE_FOREACH(const LayerPtr &layer, layers_) {
       layer->doSwitch(start_list, stop_list);
     }
   }
 
-  virtual void read(const ros::Time &time, const ros::Duration &period) {
+  virtual void read(const ros::Time &time, const ros::Duration &period) override {
     // read states from actuators
     BOOST_REVERSE_FOREACH(const LayerPtr &layer, layers_) { layer->read(time, period); }
   }
 
-  virtual void write(const ros::Time &time, const ros::Duration &period) {
+  virtual void write(const ros::Time &time, const ros::Duration &period) override {
     // write commands to actuators
     for (const LayerPtr &layer : layers_) {
       layer->write(time, period);

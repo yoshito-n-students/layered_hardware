@@ -29,7 +29,7 @@ struct DummyActuatorData {
 template < typename CommandWriter > class DummyActuatorLayer : public LayerBase {
 public:
   virtual bool init(hi::RobotHW *const hw, const ros::NodeHandle &param_nh,
-                    const std::string &urdf_str) {
+                    const std::string &urdf_str) override {
     // register actuator interfaces to the hardware so that other layers can find the interfaces
     hi::ActuatorStateInterface &state_iface(*makeRegistered< hi::ActuatorStateInterface >(hw));
     hi::PositionActuatorInterface &pos_cmd_iface(
@@ -63,21 +63,21 @@ public:
   }
 
   virtual bool prepareSwitch(const std::list< hi::ControllerInfo > &start_list,
-                             const std::list< hi::ControllerInfo > &stop_list) {
+                             const std::list< hi::ControllerInfo > &stop_list) override {
     // always ready to switch
     return true;
   }
 
   virtual void doSwitch(const std::list< hi::ControllerInfo > &start_list,
-                        const std::list< hi::ControllerInfo > &stop_list) {
+                        const std::list< hi::ControllerInfo > &stop_list) override {
     // nothing to do
   }
 
-  virtual void read(const ros::Time &time, const ros::Duration &period) {
+  virtual void read(const ros::Time &time, const ros::Duration &period) override {
     // noting to do
   }
 
-  virtual void write(const ros::Time &time, const ros::Duration &period) {
+  virtual void write(const ros::Time &time, const ros::Duration &period) override {
     // write to all actuators
     for (typename ActuatorDataMap::value_type &data : data_map_) {
       CommandWriter::write(&data.second, period);

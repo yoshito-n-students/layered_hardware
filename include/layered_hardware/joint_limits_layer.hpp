@@ -27,7 +27,7 @@ namespace layered_hardware {
 class JointLimitsLayer : public LayerBase {
 public:
   virtual bool init(hi::RobotHW *const hw, const ros::NodeHandle &param_nh,
-                    const std::string &urdf_str) {
+                    const std::string &urdf_str) override {
     // we do NOT register joint limit interfaces to the hardware
     // to prevent other layers from updating the interfaces
     // because the interfaces are stateful
@@ -60,24 +60,24 @@ public:
   }
 
   virtual bool prepareSwitch(const std::list< hi::ControllerInfo > &start_list,
-                             const std::list< hi::ControllerInfo > &stop_list) {
+                             const std::list< hi::ControllerInfo > &stop_list) override {
     // always ready to switch
     return true;
   }
 
   virtual void doSwitch(const std::list< hi::ControllerInfo > &start_list,
-                        const std::list< hi::ControllerInfo > &stop_list) {
+                        const std::list< hi::ControllerInfo > &stop_list) override {
     // reset position-based joint limits
     // because new position-based controllers may be starting
     pos_iface_.reset();
     pos_soft_iface_.reset();
   }
 
-  virtual void read(const ros::Time &time, const ros::Duration &period) {
+  virtual void read(const ros::Time &time, const ros::Duration &period) override {
     // nothing to do
   }
 
-  virtual void write(const ros::Time &time, const ros::Duration &period) {
+  virtual void write(const ros::Time &time, const ros::Duration &period) override {
     // saturate joint commands
     pos_iface_.enforceLimits(period);
     vel_iface_.enforceLimits(period);
