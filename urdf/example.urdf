@@ -2,7 +2,16 @@
 
     <!-- body => [shoulder] => upper_arm -->
 
-    <link name="body" />
+    <link name="body">
+        <visual>
+            <geometry>
+                <box size="0.10 0.10 0.10" />
+            </geometry>
+            <material name="body_material">
+                <color rgba="0.08 0.18 0.30 1.0" />
+            </material>
+        </visual>
+    </link>
 
     <joint name="shoulder" type="revolute">
         <origin xyz="0 0 0" />
@@ -12,17 +21,17 @@
         <limit lower="0" upper="3.14" effort="10.0" velocity="1.0" />
     </joint>
 
-    <transmission name="shoulder_trans">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="shoulder">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="shoulder_actuator">
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-
-    <link name="upper_arm" />
+    <link name="upper_arm">
+        <visual>
+            <origin xyz="0.1 0 0" />
+            <geometry>
+                <box size="0.20 0.08 0.08" />
+            </geometry>
+            <material name="upper_arm_material">
+                <color rgba="0.22 0.32 0.44 1.0" />
+            </material>
+        </visual>
+    </link>
 
     <!-- upper_arm => [elbow] => forearm -->
 
@@ -33,17 +42,17 @@
         <axis xyz="0 -1 0" />
     </joint>
 
-    <transmission name="elbow_trans">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="elbow">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="elbow_actuator">
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-
-    <link name="forearm" />
+    <link name="forearm">
+        <visual>
+            <origin xyz="0.1 0 0" />
+            <geometry>
+                <box size="0.20 0.06 0.06" />
+            </geometry>
+            <material name="forearm_material">
+                <color rgba="0.62 0.83 0.78 1.0" />
+            </material>
+        </visual>
+    </link>
 
     <!-- forearm => [wrist] => hand -->
 
@@ -55,16 +64,96 @@
         <limit lower="-1.0" upper="1.0" effort="10.0" velocity="1.0" />
     </joint>
 
-    <transmission name="wrist_trans">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="wrist">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="wrist_actuator">
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
+    <link name="hand">
+        <visual>
+            <geometry>
+                <box size="0.04 0.04 0.04" />
+            </geometry>
+            <material name="hand_material">
+                <color rgba="0.93 0.93 0.93 1.0" />
+            </material>
+        </visual>
+    </link>
 
-    <link name="hand" />
+    <!-- -->
+    <ros2_control name="LayeredHardware" type="system">
+        <hardware>
+            <plugin>layered_hardware/LayeredHardware</plugin>
+            <param name="layers">
+                - name: joint_limits_layer
+                  type: layered_hardware/JointLimitsLayer
+                - name: transmission_layer
+                  type: layered_hardware/TransmissionLayer
+                - name: mock_actuator_layer
+                  type: layered_hardware/MockActuatorLayer
+            </param>
+            <param name="mock_actuator_layer">
+                actuators:
+                    shoulder_actuator:
+                        command_mode_map:
+                            shoulder/position: position
+                            shoulder/velocity: velocity
+                            shoulder/effort: effort
+                    elbow_actuator:
+                        command_mode_map:
+                            elbow/position: position
+                            elbow/velocity: velocity
+                            elbow/effort: effort
+                    wrist_actuator:
+                        command_mode_map:
+                            wrist/position: position
+                            wrist/velocity: velocity
+                            wrist/effort: effort
+            </param>
+        </hardware>
+
+        <joint name="shoulder">
+            <command_interface name="position">
+                <param name="min">-1</param>
+                <param name="max">1</param>
+            </command_interface>
+            <state_interface name="position"/>
+        </joint>
+
+        <transmission name="shoulder_trans">
+            <plugin>transmission_interface/SimpleTransmission</plugin>
+            <actuator name="shoulder_actuator" role="shoulder_actuator"/>
+            <joint name="shoulder" role="shoulder">
+                <mechanical_reduction>10.0</mechanical_reduction>
+                <offset>0.0</offset>
+            </joint>
+        </transmission>
+
+        <joint name="elbow">
+            <command_interface name="position">
+            </command_interface>
+            <state_interface name="position"/>
+        </joint>
+
+        <transmission name="elbow_trans">
+            <plugin>transmission_interface/SimpleTransmission</plugin>
+            <actuator name="elbow_actuator" role="elbow_actuator"/>
+            <joint name="elbow" role="elbow">
+                <mechanical_reduction>5.0</mechanical_reduction>
+                <offset>0.0</offset>
+            </joint>
+        </transmission>
+
+        <joint name="wrist">
+            <command_interface name="position">
+            </command_interface>
+            <state_interface name="position"/>
+        </joint>
+
+        <transmission name="wrist_trans">
+            <plugin>transmission_interface/SimpleTransmission</plugin>
+            <actuator name="wrist_actuator" role="wrist_actuator"/>
+            <joint name="wrist" role="wrist">
+                <mechanical_reduction>2.0</mechanical_reduction>
+                <offset>0.0</offset>
+            </joint>
+        </transmission>
+
+    </ros2_control>
 
 </robot>

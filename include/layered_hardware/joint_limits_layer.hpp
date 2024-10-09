@@ -1,145 +1,81 @@
 #ifndef LAYERED_HARDWARE_JOINT_LIMITS_LAYER_HPP
 #define LAYERED_HARDWARE_JOINT_LIMITS_LAYER_HPP
 
-#include <list>
 #include <string>
+#include <vector>
 
-#include <hardware_interface/controller_info.h>
-#include <hardware_interface/internal/demangle_symbol.h>
-#include <hardware_interface/joint_command_interface.h>
-#include <hardware_interface/posvel_command_interface.h>
-#include <hardware_interface/robot_hw.h>
-#include <joint_limits_interface/joint_limits.h>
-#include <joint_limits_interface/joint_limits_interface.h>
-#include <joint_limits_interface/joint_limits_urdf.h>
+#include <controller_interface/controller_interface_base.hpp> // for ci::InterfaceConfiguration
+#include <hardware_interface/handle.hpp>                      // for hi::{State,Command}Interface
+#include <hardware_interface/hardware_info.hpp>
+#include <hardware_interface/loaned_command_interface.hpp>
+#include <hardware_interface/loaned_state_interface.hpp>
+#include <hardware_interface/types/hardware_interface_return_values.hpp>
+#include <joint_limits/joint_limits.hpp>
 #include <layered_hardware/common_namespaces.hpp>
-#include <layered_hardware/layer_base.hpp>
-#include <ros/console.h>
-#include <ros/duration.h>
-#include <ros/node_handle.h>
-#include <ros/time.h>
-#include <urdf/model.h>
+#include <layered_hardware/layer_interface.hpp>
+#include <rclcpp/duration.hpp>
+#include <rclcpp/time.hpp>
 
 namespace layered_hardware {
 
-// TODO: support soft limits
-
-class JointLimitsLayer : public LayerBase {
+class JointLimitsLayer : public LayerInterface {
 public:
-  virtual bool init(hi::RobotHW *const hw, const ros::NodeHandle &param_nh,
-                    const std::string &urdf_str) override {
-    // we do NOT register joint limit interfaces to the hardware
-    // to prevent other layers from updating the interfaces
-    // because the interfaces are stateful
-    /*
-    hw->registerInterface(&pos_iface_);
-    ...
-    */
-
-    // extract the robot model from the given URDF, which contains joint limits info
-    urdf::Model urdf_model;
-    if (!urdf_model.initString(urdf_str)) {
-      ROS_ERROR("JointLimitsLayer::init(): Failed to parse URDF");
-      return false;
+  virtual CallbackReturn on_init(const std::string &layer_name,
+                                 const hi::HardwareInfo &hardware_info) override {
+    // initialize the base class first
+    const CallbackReturn is_base_initialized = LayerInterface::on_init(layer_name, hardware_info);
+    if (is_base_initialized != CallbackReturn::SUCCESS) {
+      return is_base_initialized;
     }
 
-    // associate joints already registered in the joint interface of the hardware
-    // and joint limits loaded from the URDF.
-    // associated pairs will be stored in the local limits interface.
-    tieJointsAndLimits< hi::PositionJointInterface, jli::PositionJointSaturationHandle,
-                        jli::PositionJointSoftLimitsHandle >(hw, urdf_model, &pos_iface_,
-                                                             &pos_soft_iface_);
-    tieJointsAndLimits< hi::VelocityJointInterface, jli::VelocityJointSaturationHandle,
-                        jli::VelocityJointSoftLimitsHandle >(hw, urdf_model, &vel_iface_,
-                                                             &vel_soft_iface_);
-    tieJointsAndLimits< hi::EffortJointInterface, jli::EffortJointSaturationHandle,
-                        jli::EffortJointSoftLimitsHandle >(hw, urdf_model, &eff_iface_,
-                                                           &eff_soft_iface_);
-
-    return true;
+    return CallbackReturn::SUCCESS;
   }
 
-  virtual bool prepareSwitch(const std::list< hi::ControllerInfo > &start_list,
-                             const std::list< hi::ControllerInfo > &stop_list) override {
-    // always ready to switch
-    return true;
+  virtual std::vector<hi::StateInterface> export_state_interfaces() override {
+    // export nothing because no states are owned by this layer
+    return {};
   }
 
-  virtual void doSwitch(const std::list< hi::ControllerInfo > &start_list,
-                        const std::list< hi::ControllerInfo > &stop_list) override {
-    // reset position-based joint limits
-    // because new position-based controllers may be starting
-    pos_iface_.reset();
-    pos_soft_iface_.reset();
+  virtual std::vector<hi::CommandInterface> export_command_interfaces() override {
+    // export nothing because no commands are owned by this layer
+    return {};
   }
 
-  virtual void read(const ros::Time &time, const ros::Duration &period) override {
-    // nothing to do
+  virtual ci::InterfaceConfiguration state_interface_configuration() const override {
+    // any state interfaces required from other layers because this layer modifies commands only
+    return {ci::interface_configuration_type::NONE, {}};
   }
 
-  virtual void write(const ros::Time &time, const ros::Duration &period) override {
-    // saturate joint commands
-    pos_iface_.enforceLimits(period);
-    vel_iface_.enforceLimits(period);
-    eff_iface_.enforceLimits(period);
-    pos_soft_iface_.enforceLimits(period);
-    vel_soft_iface_.enforceLimits(period);
-    eff_soft_iface_.enforceLimits(period);
+  virtual ci::InterfaceConfiguration command_interface_configuration() const override {
+    return {ci::interface_configuration_type::ALL, {}};
   }
 
-protected:
-  template < typename CommandInterface, typename SaturationHandle, typename SoftLimitsHandle,
-             typename SaturationInterface, typename SoftLimitsInterface >
-  void tieJointsAndLimits(hi::RobotHW *const hw, const urdf::Model &urdf_model,
-                          SaturationInterface *const sat_iface,
-                          SoftLimitsInterface *const soft_iface) {
-    // find joint command interface that joints have been registered
-    CommandInterface *const cmd_iface(hw->get< CommandInterface >());
-    if (!cmd_iface) {
-      return;
-    }
+  virtual void
+  assign_interfaces(std::vector<hi::LoanedStateInterface> && /*state_interfaces*/,
+                    std::vector<hi::LoanedCommandInterface> && /*command_interfaces*/) override {}
 
-    // associate joints already registered and limits in the given URDF
-    const std::vector< std::string > hw_jnt_names(cmd_iface->getNames());
-    for (const std::string &hw_jnt_name : hw_jnt_names) {
-      // find a joint from URDF
-      const urdf::JointConstSharedPtr urdf_jnt(urdf_model.getJoint(hw_jnt_name));
-      if (!urdf_jnt) {
-        continue;
-      }
-      // find hard limits for the joint
-      jli::JointLimits limits;
-      if (!jli::getJointLimits(urdf_jnt, limits)) {
-        continue;
-      }
-      // associate the joint and hard limits
-      ROS_INFO_STREAM("JointLimitsLayer::init(): Initialized the joint limits ("
-                      << hi::internal::demangledTypeName< SaturationHandle >()
-                      << ") for the joint '" << hw_jnt_name << "'");
-      sat_iface->registerHandle(SaturationHandle(cmd_iface->getHandle(hw_jnt_name), limits));
-      // find soft limits for the joint
-      jli::SoftJointLimits soft_limits;
-      if (!jli::getSoftJointLimits(urdf_jnt, soft_limits)) {
-        continue;
-      }
-      // associate the joint and soft limits
-      ROS_INFO_STREAM("JointLimitsLayer::init(): Initialized the soft joint limits ("
-                      << hi::internal::demangledTypeName< SoftLimitsHandle >()
-                      << ") for the joint '" << hw_jnt_name << "'");
-      soft_iface->registerHandle(
-          SoftLimitsHandle(cmd_iface->getHandle(hw_jnt_name), limits, soft_limits));
-    }
+  virtual hi::return_type
+  prepare_command_mode_switch(const std::vector<std::string> & /*start_interfaces*/,
+                              const std::vector<std::string> & /*stop_interfaces*/) override {
+    return hi::return_type::OK;
   }
 
-protected:
-  jli::PositionJointSaturationInterface pos_iface_;
-  jli::VelocityJointSaturationInterface vel_iface_;
-  jli::EffortJointSaturationInterface eff_iface_;
+  virtual hi::return_type
+  perform_command_mode_switch(const std::vector<std::string> & /*start_interfaces*/,
+                              const std::vector<std::string> & /*stop_interfaces*/) override {
+    return hi::return_type::OK;
+  }
 
-  jli::PositionJointSoftLimitsInterface pos_soft_iface_;
-  jli::VelocityJointSoftLimitsInterface vel_soft_iface_;
-  jli::EffortJointSoftLimitsInterface eff_soft_iface_;
+  virtual hi::return_type read(const rclcpp::Time & /*time*/,
+                               const rclcpp::Duration & /*period*/) override {
+    return hi::return_type::OK;
+  }
+  virtual hi::return_type write(const rclcpp::Time & /*time*/,
+                                const rclcpp::Duration & /*period*/) override {
+    return hi::return_type::OK;
+  }
 };
+
 } // namespace layered_hardware
 
 #endif

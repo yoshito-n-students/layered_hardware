@@ -1,0 +1,60 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 10  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    shoulder_position_controller:
+      type: forward_command_controller/ForwardCommandController
+
+    shoulder_velocity_controller:
+      type: forward_command_controller/ForwardCommandController
+
+    elbow_position_controller:
+      type: forward_command_controller/ForwardCommandController
+
+    elbow_velocity_controller:
+      type: forward_command_controller/ForwardCommandController
+
+    wrist_position_controller:
+      type: forward_command_controller/ForwardCommandController
+
+    wrist_velocity_controller:
+      type: forward_command_controller/ForwardCommandController
+
+shoulder_position_controller:
+  ros__parameters:
+    joints:
+      - shoulder
+    interface_name: position
+
+shoulder_velocity_controller:
+  ros__parameters:
+    joints:
+      - shoulder
+    interface_name: velocity
+
+elbow_position_controller:
+  ros__parameters:
+    joints:
+      - elbow
+    interface_name: position
+
+elbow_velocity_controller:
+  ros__parameters:
+    joints:
+      - elbow
+    interface_name: velocity
+
+wrist_position_controller:
+  ros__parameters:
+    joints:
+      - wrist
+    interface_name: position
+
+wrist_velocity_controller:
+  ros__parameters:
+    joints:
+      - wrist
+    interface_name: velocity

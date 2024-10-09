@@ -1,29 +1,30 @@
 #ifndef LAYERED_HARDWARE_LAYERED_HARDWARE_HPP
 #define LAYERED_HARDWARE_LAYERED_HARDWARE_HPP
 
-#include <list>
+#include <memory>
 #include <string>
 #include <vector>
 
-#include <hardware_interface/controller_info.h>
-#include <hardware_interface/robot_hw.h>
+#include <hardware_interface/handle.hpp> // for hi::{State,Command}Interface
+#include <hardware_interface/hardware_info.hpp>
+#include <hardware_interface/loaned_command_interface.hpp>
+#include <hardware_interface/loaned_state_interface.hpp>
+#include <hardware_interface/system_interface.hpp>
+#include <hardware_interface/types/hardware_interface_return_values.hpp>
 #include <layered_hardware/common_namespaces.hpp>
-#include <layered_hardware/layer_base.hpp>
+#include <layered_hardware/layer_interface.hpp>
+#include <layered_hardware/merge_utils.hpp>
 #include <pluginlib/class_loader.hpp>
-#include <ros/console.h>
-#include <ros/duration.h>
-#include <ros/names.h>
-#include <ros/node_handle.h>
-#include <ros/param.h>
-#include <ros/time.h>
+#include <pluginlib/exceptions.hpp>
+#include <rclcpp/logging.hpp>
 
-#include <boost/foreach.hpp>
+#include <yaml-cpp/yaml.h>
 
 namespace layered_hardware {
 
-class LayeredHardware : public hi::RobotHW {
+class LayeredHardware : public hi::SystemInterface {
 public:
-  LayeredHardware() : layer_loader_("layered_hardware", "layered_hardware::LayerBase") {}
+  LayeredHardware() : layer_loader_("layered_hardware", "layered_hardware::LayerInterface") {}
 
   virtual ~LayeredHardware() {
     // before destructing layer loader,
@@ -31,134 +32,172 @@ public:
     layers_.clear();
   }
 
-  bool init(const ros::NodeHandle &param_nh) {
-    // get URDF description from param
-    const std::string urdf_str(getURDFStr(param_nh));
-    if (urdf_str.empty()) {
-      ROS_WARN("LayeredHardware::init(): Failed to get URDF description. "
-               "Every layers will be initialized with empty string.");
-      // continue because layers may not require robot description
+  virtual CallbackReturn on_init(const hi::HardwareInfo &hardware_info) override {
+    // initialize the base class first
+    const auto base_result = hi::SystemInterface::on_init(hardware_info);
+    if (base_result != CallbackReturn::SUCCESS) {
+      return base_result;
     }
 
-    // get layer names from param
-    std::vector< std::string > layer_names;
-    if (!param_nh.getParam("layers", layer_names)) {
-      ROS_ERROR_STREAM("LayeredHardware::init(): Failed to get param '"
-                       << param_nh.resolveName("layers") << "'");
-      return false;
-    }
-    if (layer_names.empty()) {
-      ROS_ERROR_STREAM("LayeredHardware::init(): Param '" << param_nh.resolveName("layers")
-                                                          << "' must be a string array");
-      return false;
+    // check if "layers" parameter is given
+    const auto layers_param_it = hardware_info.hardware_parameters.find("layers");
+    if (layers_param_it == hardware_info.hardware_parameters.end()) {
+      RCLCPP_FATAL_STREAM(rclcpp::get_logger("layered_hardware"),
+                          "LayeredHardware::on_init(): " << "\"layers\" parameter is missing");
+      return CallbackReturn::ERROR;
     }
 
-    // load & init layer instances from bottom (actuator-side) to upper (controller-side)
-    layers_.resize(layer_names.size());
-    for (int i = layers_.size() - 1; i >= 0; --i) {
-      const std::string &layer_name(layer_names[i]);
-      LayerPtr &layer(layers_[i]);
-      const ros::NodeHandle layer_param_nh(param_nh, layer_name);
-
-      // get layer's typename from param
-      std::string lookup_name;
-      if (!layer_param_nh.getParam("type", lookup_name)) {
-        ROS_ERROR_STREAM("LayeredHardware::init(): Failed to get param '"
-                         << layer_param_nh.resolveName("type") << "'");
-        return false;
-      }
-
-      // create a layer instance by typename
-      layer = loadLayer(lookup_name, layer_param_nh, urdf_str);
-      if (!layer) {
-        ROS_ERROR_STREAM("LayeredHardware::init(): Failed to load the layer '" << layer_name
-                                                                               << "'");
-        return false;
-      }
-
-      ROS_INFO_STREAM("LayeredHardware::init(): Initialized the layer '" << layer_name << "'");
-    }
-
-    return true;
-  }
-
-  virtual bool prepareSwitch(const std::list< hi::ControllerInfo > &start_list,
-                             const std::list< hi::ControllerInfo > &stop_list) override {
-    // ask each layers if stopping/starting given controllers is possible
-    BOOST_REVERSE_FOREACH(const LayerPtr &layer, layers_) {
-      if (!layer->prepareSwitch(start_list, stop_list)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  virtual void doSwitch(const std::list< hi::ControllerInfo > &start_list,
-                        const std::list< hi::ControllerInfo > &stop_list) override {
-    // do something required on just before switching controllers
-    BOOST_REVERSE_FOREACH(const LayerPtr &layer, layers_) {
-      layer->doSwitch(start_list, stop_list);
-    }
-  }
-
-  virtual void read(const ros::Time &time, const ros::Duration &period) override {
-    // read states from actuators
-    BOOST_REVERSE_FOREACH(const LayerPtr &layer, layers_) { layer->read(time, period); }
-  }
-
-  virtual void write(const ros::Time &time, const ros::Duration &period) override {
-    // write commands to actuators
-    for (const LayerPtr &layer : layers_) {
-      layer->write(time, period);
-    }
-  }
-
-  std::size_t size() const { return layers_.size(); }
-
-  LayerPtr layer(const std::size_t i) { return layers_[i]; }
-
-  LayerConstPtr layer(const std::size_t i) const { return layers_[i]; }
-
-protected:
-  static std::string getURDFStr(const ros::NodeHandle &param_nh) {
-    std::string urdf_str;
-    if (!param_nh.getParam("robot_description", urdf_str) &&
-        !ros::param::get("robot_description", urdf_str)) {
-      ROS_WARN_STREAM(
-          "LayeredHardware::getURDFStr(): Failed to get URDF description from params neither '"
-          << param_nh.resolveName("robot_description") << "' nor '"
-          << ros::names::resolve("robot_description"));
-      return std::string();
-    }
-    return urdf_str;
-  }
-
-  LayerPtr loadLayer(const std::string &lookup_name, const ros::NodeHandle &param_nh,
-                     const std::string &urdf_str) {
-    LayerPtr layer;
-
-    // create a layer by typename
+    // parse the "layers" parameter as yaml
+    std::vector<std::string> layer_names, layer_types;
     try {
-      layer = layer_loader_.createInstance(lookup_name);
-    } catch (const pluginlib::PluginlibException &ex) {
-      ROS_ERROR_STREAM("LayeredHardware::loadLayer(): Failed to create a layer by the lookup name '"
-                       << lookup_name << "': " << ex.what());
-      return LayerPtr();
+      const YAML::Node layers_param = YAML::Load(layers_param_it->second);
+      for (const YAML::Node &layer_param : layers_param) {
+        layer_names.push_back(layer_param["name"].as<std::string>());
+        layer_types.push_back(layer_param["type"].as<std::string>());
+      }
+    } catch (const YAML::Exception &error) {
+      RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
+                          "LayeredHardware::on_init(): " << error.what()
+                                                         << " (on parsing \"layers\" parameter)");
+      return CallbackReturn::ERROR;
     }
 
-    // init the layer
-    if (!layer->init(this, param_nh, urdf_str)) {
-      ROS_ERROR_STREAM("LayeredHardware::loadLayer(): Failed to initialize a layer");
-      return LayerPtr();
+    // load & initialize layers according to "layers" parameter
+    for (std::size_t i = 0; i < layer_names.size(); ++i) {
+      const std::string layer_disp_name =
+          "\"" + layer_names[i] + "\" layer (" + layer_types[i] + ")";
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("layered_hardware"),
+                         "LayeredHardware::on_init(): " << "Loading " << layer_disp_name);
+      // load layer
+      std::unique_ptr<LayerInterface> layer;
+      try {
+        layer.reset(layer_loader_.createUnmanagedInstance(layer_types[i]));
+      } catch (const pluginlib::PluginlibException &error) {
+        RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
+                            "LayeredHardware::on_init(): " << error.what() << " (on creating "
+                                                           << layer_disp_name << ")");
+        return CallbackReturn::ERROR;
+      }
+      // initialize layer
+      const CallbackReturn is_layer_initialized = layer->on_init(layer_names[i], hardware_info);
+      if (is_layer_initialized != CallbackReturn::SUCCESS) {
+        RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
+                            "LayeredHardware::on_init(): " << "Failed to initialize "
+                                                           << layer_disp_name);
+        return is_layer_initialized;
+      }
+      // store successfully-loaded layer
+      layers_.push_back(std::move(layer));
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("layered_hardware"),
+                         "LayeredHardware::on_init(): " << "Loaded " << layer_disp_name);
     }
 
-    return layer;
+    // check if one layer at least has been loaded??
+
+    // populate command & state interfaces from each layer
+    state_ifaces_ = export_state_interfaces();
+    command_ifaces_ = export_command_interfaces();
+
+    // assign state & command interfaces to each layer
+    for (auto &layer : layers_) {
+      layer->assign_interfaces(loan_interfaces<hi::LoanedStateInterface>(
+                                   state_ifaces_, layer->state_interface_configuration()),
+                               loan_interfaces<hi::LoanedCommandInterface>(
+                                   command_ifaces_, layer->command_interface_configuration()));
+    }
+
+    return CallbackReturn::SUCCESS;
+  }
+
+  virtual std::vector<hi::StateInterface> export_state_interfaces() override {
+    std::vector<hi::StateInterface> ifaces;
+    for (auto &layer : layers_) {
+      ifaces = merge(std::move(ifaces), layer->export_state_interfaces());
+    }
+    return ifaces;
+  }
+
+  virtual std::vector<hi::CommandInterface> export_command_interfaces() override {
+    std::vector<hi::CommandInterface> ifaces;
+    for (auto &layer : layers_) {
+      ifaces = merge(std::move(ifaces), layer->export_command_interfaces());
+    }
+    return ifaces;
+  }
+
+  virtual hi::return_type
+  prepare_command_mode_switch(const std::vector<std::string> &start_interfaces,
+                              const std::vector<std::string> &stop_interfaces) override {
+    hi::return_type result = hi::return_type::OK;
+    for (auto &layer : layers_) {
+      result = merge(result, layer->prepare_command_mode_switch(start_interfaces, stop_interfaces));
+    }
+    return result;
+  }
+
+  virtual hi::return_type
+  perform_command_mode_switch(const std::vector<std::string> &start_interfaces,
+                              const std::vector<std::string> &stop_interfaces) override {
+    hi::return_type result = hi::return_type::OK;
+    for (auto &layer : layers_) {
+      result = merge(result, layer->perform_command_mode_switch(start_interfaces, stop_interfaces));
+    }
+    return result;
+  }
+
+  virtual hi::return_type read(const rclcpp::Time &time, const rclcpp::Duration &period) override {
+    //  iterate layers in reverse order
+    hi::return_type result = hi::return_type::OK;
+    for (auto layer = layers_.rbegin(); layer != layers_.rend(); ++layer) {
+      result = merge(result, (*layer)->read(time, period));
+    }
+    return result;
+  }
+
+  virtual hi::return_type write(const rclcpp::Time &time, const rclcpp::Duration &period) override {
+    hi::return_type result = hi::return_type::OK;
+    for (const auto &layer : layers_) {
+      result = merge(result, layer->write(time, period));
+    }
+    return result;
+  }
+
+private:
+  // pick some of interfaces based on given config
+  template <class LoanedIface, class Iface>
+  static std::vector<LoanedIface> loan_interfaces(std::vector<Iface> &ifaces,
+                                                  const ci::InterfaceConfiguration &config) {
+    std::vector<LoanedIface> loaned_ifaces;
+    switch (config.type) {
+    case ci::interface_configuration_type::ALL:
+      for (auto &iface : ifaces) {
+        loaned_ifaces.emplace_back(iface);
+      }
+      break;
+    case ci::interface_configuration_type::INDIVIDUAL:
+      for (auto &iface : ifaces) {
+        if (std::find(config.names.begin(), config.names.end(), iface.get_name()) !=
+            config.names.end()) {
+          loaned_ifaces.emplace_back(iface);
+        }
+      }
+      break;
+    case ci::interface_configuration_type::NONE:
+      break;
+    default:
+      // TODO: warn unknown config type
+      break;
+    }
+    return loaned_ifaces;
   }
 
 protected:
-  pluginlib::ClassLoader< LayerBase > layer_loader_;
-  std::vector< LayerPtr > layers_;
+  pluginlib::ClassLoader<LayerInterface> layer_loader_;
+  std::vector<std::unique_ptr<LayerInterface>> layers_;
+  std::vector<hi::CommandInterface> command_ifaces_;
+  std::vector<hi::StateInterface> state_ifaces_;
 };
+
 } // namespace layered_hardware
 
 #endif
