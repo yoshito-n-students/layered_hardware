@@ -26,8 +26,8 @@ public:
     std::vector<std::string> mapped_mode_names;
     try {
       for (const auto &iface_mode_pair : params["command_mode_map"]) {
-        bound_interfaces_.push_back(iface_mode_pair.first.as<std::string>());
-        mapped_mode_names.push_back(iface_mode_pair.second.as<std::string>());
+        bound_interfaces_.emplace_back(iface_mode_pair.first.as<std::string>());
+        mapped_mode_names.emplace_back(iface_mode_pair.second.as<std::string>());
       }
     } catch (const YAML::Exception &error) {
       throw std::runtime_error("Failed to parse parameter for \"" + name +
