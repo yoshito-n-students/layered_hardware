@@ -19,6 +19,7 @@
 #include <layered_hardware/joint_to_actuator_transmission.hpp>
 #include <layered_hardware/layer_interface.hpp>
 #include <layered_hardware/merge_utils.hpp>
+#include <layered_hardware/string_registry.hpp>
 #include <pluginlib/class_loader.hpp>
 #include <pluginlib/exceptions.hpp>
 #include <rclcpp/duration.hpp>
@@ -163,14 +164,12 @@ public:
   }
 
   virtual hi::return_type
-  prepare_command_mode_switch(const std::vector<std::string> & /*start_interfaces*/,
-                              const std::vector<std::string> & /*stop_interfaces*/) override {
+  prepare_command_mode_switch(const StringRegistry & /*active_interfaces*/) override {
     return hi::return_type::OK;
   }
 
   virtual hi::return_type
-  perform_command_mode_switch(const std::vector<std::string> & /*start_interfaces*/,
-                              const std::vector<std::string> & /*stop_interfaces*/) override {
+  perform_command_mode_switch(const StringRegistry & /*active_interfaces*/) override {
     return hi::return_type::OK;
   }
 

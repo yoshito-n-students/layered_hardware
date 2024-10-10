@@ -16,6 +16,7 @@
 #include <layered_hardware/layer_interface.hpp>
 #include <layered_hardware/merge_utils.hpp>
 #include <layered_hardware/mock_actuator.hpp>
+#include <layered_hardware/string_registry.hpp>
 #include <rclcpp/duration.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
@@ -110,19 +111,21 @@ public:
   }
 
   virtual hi::return_type
-  prepare_command_mode_switch(const std::vector<std::string> & /*start_interfaces*/,
-                              const std::vector<std::string> & /*stop_interfaces*/) override {
-    // no preparation for mode switch is required
-    return hi::return_type::OK;
-  }
-
-  virtual hi::return_type
-  perform_command_mode_switch(const std::vector<std::string> &start_interfaces,
-                              const std::vector<std::string> &stop_interfaces) override {
+  prepare_command_mode_switch(const StringRegistry &active_interfaces) override {
     // notify controller switching to all actuators
     hi::return_type result = hi::return_type::OK;
     for (const auto &ator : actuators_) {
-      result = merge(result, ator->perform_command_mode_switch(start_interfaces, stop_interfaces));
+      result = merge(result, ator->prepare_command_mode_switch(active_interfaces));
+    }
+    return result;
+  }
+
+  virtual hi::return_type
+  perform_command_mode_switch(const StringRegistry &active_interfaces) override {
+    // notify controller switching to all actuators
+    hi::return_type result = hi::return_type::OK;
+    for (const auto &ator : actuators_) {
+      result = merge(result, ator->perform_command_mode_switch(active_interfaces));
     }
     return result;
   }

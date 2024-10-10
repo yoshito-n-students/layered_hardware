@@ -14,6 +14,7 @@
 #include <layered_hardware/common_namespaces.hpp>
 #include <layered_hardware/layer_interface.hpp>
 #include <layered_hardware/merge_utils.hpp>
+#include <layered_hardware/string_registry.hpp>
 #include <pluginlib/class_loader.hpp>
 #include <pluginlib/exceptions.hpp>
 #include <rclcpp/logging.hpp>
@@ -128,20 +129,35 @@ public:
   virtual hi::return_type
   prepare_command_mode_switch(const std::vector<std::string> &start_interfaces,
                               const std::vector<std::string> &stop_interfaces) override {
+    // update the list of active interfaces
+    // (However, since the actual activation/deactivation does not occur at the time,
+    // the update will be rolled back later)
+    active_interfaces_.update(start_interfaces, stop_interfaces);
+
+    // ask each layer whether updating the interfaces is acceptable
     hi::return_type result = hi::return_type::OK;
     for (auto &layer : layers_) {
-      result = merge(result, layer->prepare_command_mode_switch(start_interfaces, stop_interfaces));
+      result = merge(result, layer->prepare_command_mode_switch(active_interfaces_));
     }
+
+    // rollback the update of list
+    active_interfaces_.update(stop_interfaces, start_interfaces);
+
     return result;
   }
 
   virtual hi::return_type
   perform_command_mode_switch(const std::vector<std::string> &start_interfaces,
                               const std::vector<std::string> &stop_interfaces) override {
+    // update the list of active interfaces
+    active_interfaces_.update(start_interfaces, stop_interfaces);
+
+    // notigy each layers the update of the active interfaces to trigger layer's mode switch
     hi::return_type result = hi::return_type::OK;
     for (auto &layer : layers_) {
-      result = merge(result, layer->perform_command_mode_switch(start_interfaces, stop_interfaces));
+      result = merge(result, layer->perform_command_mode_switch(active_interfaces_));
     }
+
     return result;
   }
 
@@ -194,6 +210,7 @@ private:
 protected:
   pluginlib::ClassLoader<LayerInterface> layer_loader_;
   std::vector<std::unique_ptr<LayerInterface>> layers_;
+  StringRegistry active_interfaces_;
 };
 
 } // namespace layered_hardware

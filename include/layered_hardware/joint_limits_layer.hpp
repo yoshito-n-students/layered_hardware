@@ -13,6 +13,7 @@
 #include <joint_limits/joint_limits.hpp>
 #include <layered_hardware/common_namespaces.hpp>
 #include <layered_hardware/layer_interface.hpp>
+#include <layered_hardware/string_registry.hpp>
 #include <rclcpp/duration.hpp>
 #include <rclcpp/time.hpp>
 
@@ -55,14 +56,12 @@ public:
                     std::vector<hi::LoanedCommandInterface> && /*command_interfaces*/) override {}
 
   virtual hi::return_type
-  prepare_command_mode_switch(const std::vector<std::string> & /*start_interfaces*/,
-                              const std::vector<std::string> & /*stop_interfaces*/) override {
+  prepare_command_mode_switch(const StringRegistry & /*active_interfaces*/) override {
     return hi::return_type::OK;
   }
 
   virtual hi::return_type
-  perform_command_mode_switch(const std::vector<std::string> & /*start_interfaces*/,
-                              const std::vector<std::string> & /*stop_interfaces*/) override {
+  perform_command_mode_switch(const StringRegistry & /*active_interfaces*/) override {
     return hi::return_type::OK;
   }
 

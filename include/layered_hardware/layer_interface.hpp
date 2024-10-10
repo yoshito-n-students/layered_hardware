@@ -11,6 +11,7 @@
 #include <hardware_interface/loaned_state_interface.hpp>
 #include <hardware_interface/types/hardware_interface_return_values.hpp> // for hi::return_type
 #include <layered_hardware/common_namespaces.hpp>
+#include <layered_hardware/string_registry.hpp>
 #include <rclcpp/duration.hpp>
 #include <rclcpp/time.hpp>
 #include <rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp>
@@ -38,13 +39,11 @@ public:
                                  std::vector<hi::LoanedCommandInterface> &&command_interfaces) = 0;
 
   virtual hi::return_type
-  prepare_command_mode_switch(const std::vector<std::string> & /*start_interfaces*/,
-                              const std::vector<std::string> & /*stop_interfaces*/) {
+  prepare_command_mode_switch(const StringRegistry & /*active_interfaces*/) {
     return hi::return_type::OK;
   }
   virtual hi::return_type
-  perform_command_mode_switch(const std::vector<std::string> & /*start_interfaces*/,
-                              const std::vector<std::string> & /*stop_interfaces*/) {
+  perform_command_mode_switch(const StringRegistry & /*active_interfaces*/) {
     return hi::return_type::OK;
   }
 
