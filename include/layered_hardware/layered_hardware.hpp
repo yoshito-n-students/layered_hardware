@@ -95,15 +95,15 @@ public:
     // check if one layer at least has been loaded??
 
     // populate command & state interfaces from each layer
-    state_ifaces_ = export_state_interfaces();
-    command_ifaces_ = export_command_interfaces();
+    std::vector<hi::StateInterface> state_ifaces = export_state_interfaces();
+    std::vector<hi::CommandInterface> command_ifaces = export_command_interfaces();
 
     // assign state & command interfaces to each layer
     for (auto &layer : layers_) {
       layer->assign_interfaces(loan_interfaces<hi::LoanedStateInterface>(
-                                   state_ifaces_, layer->state_interface_configuration()),
+                                   state_ifaces, layer->state_interface_configuration()),
                                loan_interfaces<hi::LoanedCommandInterface>(
-                                   command_ifaces_, layer->command_interface_configuration()));
+                                   command_ifaces, layer->command_interface_configuration()));
     }
 
     return CallbackReturn::SUCCESS;
@@ -194,8 +194,6 @@ private:
 protected:
   pluginlib::ClassLoader<LayerInterface> layer_loader_;
   std::vector<std::unique_ptr<LayerInterface>> layers_;
-  std::vector<hi::CommandInterface> command_ifaces_;
-  std::vector<hi::StateInterface> state_ifaces_;
 };
 
 } // namespace layered_hardware
