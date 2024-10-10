@@ -96,15 +96,17 @@ public:
     // check if one layer at least has been loaded??
 
     // populate command & state interfaces from each layer
-    std::vector<hi::StateInterface> state_ifaces = export_state_interfaces();
-    std::vector<hi::CommandInterface> command_ifaces = export_command_interfaces();
+    // (these interfaces are referenced by layers,
+    //  so they must be member variables to match the layers' lifespan)
+    state_interfaces_ = export_state_interfaces();
+    command_interfaces_ = export_command_interfaces();
 
     // assign state & command interfaces to each layer
     for (auto &layer : layers_) {
       layer->assign_interfaces(loan_interfaces<hi::LoanedStateInterface>(
-                                   state_ifaces, layer->state_interface_configuration()),
+                                   state_interfaces_, layer->state_interface_configuration()),
                                loan_interfaces<hi::LoanedCommandInterface>(
-                                   command_ifaces, layer->command_interface_configuration()));
+                                   command_interfaces_, layer->command_interface_configuration()));
     }
 
     return CallbackReturn::SUCCESS;
@@ -210,6 +212,8 @@ private:
 protected:
   pluginlib::ClassLoader<LayerInterface> layer_loader_;
   std::vector<std::unique_ptr<LayerInterface>> layers_;
+  std::vector<hi::StateInterface> state_interfaces_;
+  std::vector<hi::CommandInterface> command_interfaces_;
   StringRegistry active_interfaces_;
 };
 
