@@ -22,7 +22,7 @@ namespace layered_hardware {
 class ActuatorToJointTransmission {
 public:
   ActuatorToJointTransmission(const hi::TransmissionInfo &trans_info,
-                              const ti::TransmissionSharedPtr &&converter)
+                              ti::TransmissionSharedPtr &&converter)
       : trans_info_(trans_info), converter_(std::move(converter)) {
     // converter must be unique because it will be exclusively configured in assign_interfaces()
     if (!converter_) {
