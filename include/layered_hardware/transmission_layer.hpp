@@ -80,8 +80,8 @@ public:
         trans.reset(new JointToActuatorTransmission(trans_info, std::move(converter)));
       } catch (const std::runtime_error &error) {
         RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                            "TransmissionLayer::on_init(): " << "Failed to create "
-                                                             << trans_disp_name);
+                            "TransmissionLayer::on_init(): "
+                                << "Failed to create " << trans_disp_name << ": " << error.what());
         return CallbackReturn::ERROR;
       }
       // make transmission owned by this layer
@@ -108,8 +108,8 @@ public:
         trans.reset(new ActuatorToJointTransmission(trans_info, std::move(converter)));
       } catch (const std::runtime_error &error) {
         RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                            "TransmissionLayer::on_init(): " << "Failed to create "
-                                                             << trans_disp_name);
+                            "TransmissionLayer::on_init(): "
+                                << "Failed to create " << trans_disp_name << ": " << error.what());
         return CallbackReturn::ERROR;
       }
       // make transmission owned by this layer
