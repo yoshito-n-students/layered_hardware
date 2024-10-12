@@ -80,6 +80,8 @@
         <hardware>
             <plugin>layered_hardware/LayeredHardware</plugin>
             <param name="layers">
+                - name: monitor_layer
+                  type: layered_hardware/MonitorLayer
                 - name: joint_limits_layer
                   type: layered_hardware/JointLimitsLayer
                 - name: transmission_layer
