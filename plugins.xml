@@ -21,6 +21,13 @@
     </description>
   </class>
 
+  <class name="layered_hardware/MonitorLayer"
+         type="layered_hardware::MonitorLayer"
+         base_class_type="layered_hardware::LayerInterface">
+    <description>
+    </description>
+  </class>
+
   <class name="layered_hardware/TransmissionLayer"
          type="layered_hardware::TransmissionLayer"
          base_class_type="layered_hardware::LayerInterface">
