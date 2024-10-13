@@ -18,12 +18,12 @@
 #include <layered_hardware/common_namespaces.hpp>
 #include <layered_hardware/joint_to_actuator_transmission.hpp>
 #include <layered_hardware/layer_interface.hpp>
+#include <layered_hardware/logging_utils.hpp>
 #include <layered_hardware/merge_utils.hpp>
 #include <layered_hardware/string_registry.hpp>
 #include <pluginlib/class_loader.hpp>
 #include <pluginlib/exceptions.hpp>
 #include <rclcpp/duration.hpp>
-#include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
 #include <transmission_interface/exception.hpp>
 #include <transmission_interface/transmission.hpp>
@@ -55,10 +55,8 @@ public:
       try {
         converter_factory.reset(converter_factory_loader_.createUnmanagedInstance(trans_type));
       } catch (const pluginlib::PluginlibException &error) {
-        RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                            "TransmissionLayer::on_init(): " << "Failed to load factory for \""
-                                                             << trans_type
-                                                             << "\": " << error.what());
+        LH_ERROR("TransmissionLayer::on_init(): Failed to load factory for \"%s\": %s",
+                 trans_type.c_str(), error.what());
         return CallbackReturn::ERROR;
       }
     }
@@ -70,9 +68,8 @@ public:
       // create converter from joint to actuator space
       ti::TransmissionSharedPtr converter = converter_factories_[trans_info.type]->load(trans_info);
       if (!converter) {
-        RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                            "TransmissionLayer::on_init(): " << "Failed to create converter for "
-                                                             << trans_disp_name);
+        LH_ERROR("TransmissionLayer::on_init(): Failed to create converter for %s",
+                 trans_disp_name.c_str());
         return CallbackReturn::ERROR;
       }
       // create transmission
@@ -80,15 +77,13 @@ public:
       try {
         trans.reset(new JointToActuatorTransmission(trans_info, std::move(converter)));
       } catch (const std::runtime_error &error) {
-        RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                            "TransmissionLayer::on_init(): "
-                                << "Failed to create " << trans_disp_name << ": " << error.what());
+        LH_ERROR("TransmissionLayer::on_init(): Failed to create %s: %s", //
+                 trans_disp_name.c_str(), error.what());
         return CallbackReturn::ERROR;
       }
       // make transmission owned by this layer
       joint_to_actuator_transmissions_[trans_info.name] = std::move(trans);
-      RCLCPP_INFO_STREAM(rclcpp::get_logger("layered_hardware"),
-                         "TransmissionLayer::on_init(): " << "Loaded " << trans_disp_name);
+      LH_INFO("TransmissionLayer::on_init(): Loaded %s", trans_disp_name.c_str());
     }
 
     // create actuator-to-joint transmissions
@@ -98,9 +93,8 @@ public:
       // create converter from actuator to joint space
       ti::TransmissionSharedPtr converter = converter_factories_[trans_info.type]->load(trans_info);
       if (!converter) {
-        RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                            "TransmissionLayer::on_init(): " << "Failed to create converter for "
-                                                             << trans_disp_name);
+        LH_ERROR("TransmissionLayer::on_init(): Failed to create converter for %s",
+                 trans_disp_name.c_str());
         return CallbackReturn::ERROR;
       }
       // create transmission
@@ -108,15 +102,13 @@ public:
       try {
         trans.reset(new ActuatorToJointTransmission(trans_info, std::move(converter)));
       } catch (const std::runtime_error &error) {
-        RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                            "TransmissionLayer::on_init(): "
-                                << "Failed to create " << trans_disp_name << ": " << error.what());
+        LH_ERROR("TransmissionLayer::on_init(): Failed to create %s: %s", //
+                 trans_disp_name.c_str(), error.what());
         return CallbackReturn::ERROR;
       }
       // make transmission owned by this layer
       actuator_to_joint_transmissions_[trans_info.name] = std::move(trans);
-      RCLCPP_INFO_STREAM(rclcpp::get_logger("layered_hardware"),
-                         "TransmissionLayer::on_init(): " << "Loaded " << trans_disp_name);
+      LH_INFO("TransmissionLayer::on_init(): Loaded %s", trans_disp_name.c_str());
     }
 
     return CallbackReturn::SUCCESS;

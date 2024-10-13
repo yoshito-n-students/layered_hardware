@@ -12,7 +12,7 @@
 #include <hardware_interface/hardware_info.hpp>
 #include <hardware_interface/loaned_command_interface.hpp>
 #include <layered_hardware/common_namespaces.hpp>
-#include <rclcpp/logging.hpp>
+#include <layered_hardware/logging_utils.hpp>
 #include <transmission_interface/exception.hpp>
 #include <transmission_interface/handle.hpp>
 #include <transmission_interface/transmission.hpp>
@@ -97,10 +97,9 @@ public:
     try {
       converter_->configure(joint_handles, actuator_handles);
     } catch (const ti::Exception &error) {
-      RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                          "JointToActuatorTransmission::assign_interfaces(): "
-                              << "Failed to configure \"" << trans_info_.name
-                              << "\": " << error.what());
+      LH_ERROR("JointToActuatorTransmission::assign_interfaces(): "
+               "Failed to configure converter for \"%s\" transmission: %s",
+               trans_info_.name.c_str(), error.what());
       return;
     }
   }

@@ -10,9 +10,9 @@
 #include <hardware_interface/handle.hpp> // for hi::{State,Command}Interface
 #include <hardware_interface/types/hardware_interface_type_values.hpp>
 #include <layered_hardware/common_namespaces.hpp>
+#include <layered_hardware/logging_utils.hpp>
 #include <layered_hardware/string_registry.hpp>
 #include <rclcpp/duration.hpp>
-#include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
 
 #include <yaml-cpp/yaml.h>
@@ -69,11 +69,10 @@ public:
     if (active_bound_ifaces.size() <= 1) {
       return hi::return_type::OK;
     } else { // active_bound_ifaces.size() >= 2
-      RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                          "MockActuator::prepare_command_mode_switch(): "
-                              << "Reject mode switching of \"" << name_ << "\" actuator because "
-                              << active_bound_ifaces.size()
-                              << " bound interfaces are about to be active");
+      LH_ERROR("MockActuator::prepare_command_mode_switch(): "
+               "Reject mode switching of \"%s\" actuator "
+               "because %ld bound interfaces are about to be active",
+               name_.c_str(), active_bound_ifaces.size());
       return hi::return_type::ERROR;
     }
   }
@@ -82,10 +81,10 @@ public:
     // check how many interfaces associated with actuator command mode are active
     const std::vector<std::size_t> active_bound_ifaces = active_interfaces.find(bound_interfaces_);
     if (active_bound_ifaces.size() >= 2) {
-      RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                          "MockActuator::perform_command_mode_switch(): "
-                              << "Could not switch mode of \"" << name_ << "\" actuator because "
-                              << bound_interfaces_.size() << " bound interfaces are active");
+      LH_ERROR("MockActuator::perform_command_mode_switch(): "
+               "Could not switch mode of \"%s\" actuator "
+               "because %ld bound interfaces are active",
+               name_.c_str(), bound_interfaces_.size());
       return hi::return_type::ERROR;
     }
 
@@ -95,10 +94,9 @@ public:
                                       : command_mode::READ_ONLY /*fallback*/);
     if (present_mode_ != next_mode) {
       present_mode_ = next_mode;
-      RCLCPP_INFO_STREAM(rclcpp::get_logger("layered_hardware"),
-                         "MockActuator::perform_command_mode_switch(): "
-                             << "Switched \"" << name_ << "\" actuator to \""
-                             << to_string(present_mode_) << "\" mode");
+      LH_INFO("MockActuator::perform_command_mode_switch(): "
+              "Switched \"%s\" actuator to \"%s\" mode",
+              name_.c_str(), to_string(present_mode_).c_str());
     }
     return hi::return_type::OK;
   }
@@ -137,9 +135,8 @@ public:
       return hi::return_type::OK;
     default:
       // should never happen
-      RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                          "MockActuator::write(): " << "Unknown command mode id ("
-                                                    << static_cast<int>(present_mode_) << ")");
+      LH_ERROR("MockActuator::write(): Unknown command mode id (%d)",
+               static_cast<int>(present_mode_));
       return hi::return_type::ERROR;
     }
   }

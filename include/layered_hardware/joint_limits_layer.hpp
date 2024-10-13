@@ -17,9 +17,9 @@
 // #include <joint_limits/joint_limits.hpp>
 #include <layered_hardware/common_namespaces.hpp>
 #include <layered_hardware/layer_interface.hpp>
+#include <layered_hardware/logging_utils.hpp>
 #include <layered_hardware/string_registry.hpp>
 #include <rclcpp/duration.hpp>
-#include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
 
 namespace layered_hardware {
@@ -49,19 +49,16 @@ public:
         }
         // skip contradictory limits
         if ((!std::isnan(min)) && (!std::isnan(max)) && (min > max)) {
-          RCLCPP_WARN_STREAM(rclcpp::get_logger("layered_hardware"),
-                             "JointLimitsLayer::on_init(): "
-                                 << "Ignored contradictory limit settings where min: " << min
-                                 << " > max: " << max << " for \"" << full_iface_name
-                                 << "\" interface");
+          LH_WARN(
+              "JointLimitsLayer::on_init(): "
+              "Ignored contradictory limit settings where min: %f > max: %f for \"%s\" interface",
+              min, max, full_iface_name.c_str());
           continue;
         }
         // store validated limits
         command_limits_.emplace(full_iface_name, std::make_pair(min, max));
-        RCLCPP_WARN_STREAM(rclcpp::get_logger("layered_hardware"),
-                           "JointLimitsLayer::on_init(): " << "Loaded limit settings [" << min
-                                                           << ", " << max << "] for \""
-                                                           << full_iface_name << "\" interface");
+        LH_WARN("JointLimitsLayer::on_init(): Loaded limit settings [%f, %f] for \"%s\" interface",
+                min, max, full_iface_name.c_str());
       }
     }
 

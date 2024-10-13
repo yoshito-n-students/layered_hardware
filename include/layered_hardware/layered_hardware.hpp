@@ -13,11 +13,13 @@
 #include <hardware_interface/types/hardware_interface_return_values.hpp>
 #include <layered_hardware/common_namespaces.hpp>
 #include <layered_hardware/layer_interface.hpp>
+#include <layered_hardware/logging_utils.hpp>
 #include <layered_hardware/merge_utils.hpp>
 #include <layered_hardware/string_registry.hpp>
 #include <pluginlib/class_loader.hpp>
 #include <pluginlib/exceptions.hpp>
-#include <rclcpp/logging.hpp>
+#include <rclcpp/duration.hpp>
+#include <rclcpp/time.hpp>
 
 #include <yaml-cpp/yaml.h>
 
@@ -43,8 +45,7 @@ public:
     // check if "layers" parameter is given
     const auto layers_param_it = hardware_info.hardware_parameters.find("layers");
     if (layers_param_it == hardware_info.hardware_parameters.end()) {
-      RCLCPP_FATAL_STREAM(rclcpp::get_logger("layered_hardware"),
-                          "LayeredHardware::on_init(): " << "\"layers\" parameter is missing");
+      LH_ERROR("LayeredHardware::on_init(): \"layers\" parameter is missing");
       return CallbackReturn::ERROR;
     }
 
@@ -57,9 +58,7 @@ public:
         layer_types.push_back(layer_param["type"].as<std::string>());
       }
     } catch (const YAML::Exception &error) {
-      RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                          "LayeredHardware::on_init(): " << error.what()
-                                                         << " (on parsing \"layers\" parameter)");
+      LH_ERROR("LayeredHardware::on_init(): %s (on parsing \"layers\" parameter)", error.what());
       return CallbackReturn::ERROR;
     }
 
@@ -67,30 +66,25 @@ public:
     for (std::size_t i = 0; i < layer_names.size(); ++i) {
       const std::string layer_disp_name =
           "\"" + layer_names[i] + "\" layer (" + layer_types[i] + ")";
-      RCLCPP_INFO_STREAM(rclcpp::get_logger("layered_hardware"),
-                         "LayeredHardware::on_init(): " << "Loading " << layer_disp_name);
+      LH_INFO("LayeredHardware::on_init(): Loading %s", layer_disp_name.c_str());
       // load layer
       std::unique_ptr<LayerInterface> layer;
       try {
         layer.reset(layer_loader_.createUnmanagedInstance(layer_types[i]));
       } catch (const pluginlib::PluginlibException &error) {
-        RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                            "LayeredHardware::on_init(): " << error.what() << " (on creating "
-                                                           << layer_disp_name << ")");
+        LH_ERROR("LayeredHardware::on_init(): %s (on creating %s)", //
+                 error.what(), layer_disp_name.c_str());
         return CallbackReturn::ERROR;
       }
       // initialize layer
       const CallbackReturn is_layer_initialized = layer->on_init(layer_names[i], hardware_info);
       if (is_layer_initialized != CallbackReturn::SUCCESS) {
-        RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                            "LayeredHardware::on_init(): " << "Failed to initialize "
-                                                           << layer_disp_name);
+        LH_ERROR("LayeredHardware::on_init(): Failed to initialize %s", layer_disp_name.c_str());
         return is_layer_initialized;
       }
       // store successfully-loaded layer
       layers_.push_back(std::move(layer));
-      RCLCPP_INFO_STREAM(rclcpp::get_logger("layered_hardware"),
-                         "LayeredHardware::on_init(): " << "Loaded " << layer_disp_name);
+      LH_INFO("LayeredHardware::on_init(): Loaded %s", layer_disp_name.c_str());
     }
 
     // check if one layer at least has been loaded??

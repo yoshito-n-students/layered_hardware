@@ -15,9 +15,9 @@
 #include <hardware_interface/types/hardware_interface_return_values.hpp>
 #include <layered_hardware/common_namespaces.hpp>
 #include <layered_hardware/layer_interface.hpp>
+#include <layered_hardware/logging_utils.hpp>
 #include <layered_hardware/string_registry.hpp>
 #include <rclcpp/duration.hpp>
-#include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
 
 namespace layered_hardware {
@@ -43,9 +43,8 @@ public:
         const YAML::Node params = YAML::Load(params_it->second);
         precision_ = params["precision"].as<int>(10);
       } catch (const YAML::Exception &error) {
-        RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                            "MonitorLayer::on_init(): " << error.what() << " (on parsing \""
-                                                        << layer_name << "\" parameter)");
+        LH_ERROR("MonitorLayer::on_init(): %s (on parsing \"%s\" parameter)", //
+                 error.what(), layer_name.c_str());
         return CallbackReturn::ERROR;
       }
     }
@@ -120,7 +119,7 @@ public:
       msg << "  Command interfaces:\n";
       format(msg, /* n_indent = */ 4, precision_, changed_commands);
     }
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("layered_hardware"), msg.str());
+    LH_INFO(msg.str().c_str());
 
     // update storage for previous states & commands
     previous_states_ = extract_values(loaned_states_);

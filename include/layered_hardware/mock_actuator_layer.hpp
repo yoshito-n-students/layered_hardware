@@ -14,11 +14,11 @@
 #include <hardware_interface/types/hardware_interface_type_values.hpp>
 #include <layered_hardware/common_namespaces.hpp>
 #include <layered_hardware/layer_interface.hpp>
+#include <layered_hardware/logging_utils.hpp>
 #include <layered_hardware/merge_utils.hpp>
 #include <layered_hardware/mock_actuator.hpp>
 #include <layered_hardware/string_registry.hpp>
 #include <rclcpp/duration.hpp>
-#include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
 
 #include <yaml-cpp/yaml.h>
@@ -38,9 +38,7 @@ public:
     // find parameter group for this layer
     const auto params_it = hardware_info.hardware_parameters.find(layer_name);
     if (params_it == hardware_info.hardware_parameters.end()) {
-      RCLCPP_FATAL_STREAM(rclcpp::get_logger("layered_hardware"),
-                          "MockActuatorLayer::on_init(): " << "\"" << layer_name
-                                                           << "\" parameter is missing");
+      LH_ERROR("MockActuatorLayer::on_init(): \"%s\" parameter is missing", layer_name.c_str());
       return CallbackReturn::ERROR;
     }
 
@@ -52,9 +50,8 @@ public:
         actuator_list.emplace(name_param_pair.first.as<std::string>(), name_param_pair.second);
       }
     } catch (const YAML::Exception &error) {
-      RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                          "MockActuatorLayer::on_init(): " << error.what() << " (on parsing \""
-                                                           << layer_name << "\" parameter)");
+      LH_ERROR("MockActuatorLayer::on_init(): %s (on parsing \"%s\" parameter)", //
+               error.what(), layer_name.c_str());
       return CallbackReturn::ERROR;
     }
 
@@ -63,14 +60,11 @@ public:
       try {
         actuators_.emplace_back(new MockActuator(ator_name, ator_params));
       } catch (const std::runtime_error &error) {
-        RCLCPP_ERROR_STREAM(rclcpp::get_logger("layered_hardware"),
-                            "MockActuatorLayer::on_init(): " << "Failed to create \"" << ator_name
-                                                             << "\" actuator");
+        LH_ERROR("MockActuatorLayer::on_init(): Failed to create \"%s\" actuator",
+                 ator_name.c_str());
         return CallbackReturn::ERROR;
       }
-      RCLCPP_INFO_STREAM(rclcpp::get_logger("layered_hardware"),
-                         "MockActuatorLayer::on_init(): " << "Created \"" << ator_name
-                                                          << "\" actuator");
+      LH_INFO("MockActuatorLayer::on_init(): Created \"%s\" actuator", ator_name.c_str());
     }
 
     return CallbackReturn::SUCCESS;
