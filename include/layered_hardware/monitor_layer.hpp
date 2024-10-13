@@ -1,8 +1,8 @@
 #ifndef LAYERED_HARDWARE_MONITOR_LAYER_HPP
 #define LAYERED_HARDWARE_MONITOR_LAYER_HPP
 
+#include <functional>
 #include <iomanip>
-#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -76,23 +76,9 @@ public:
   virtual void
   assign_interfaces(std::vector<hi::LoanedStateInterface> &&parent_loaned_states,
                     std::vector<hi::LoanedCommandInterface> &&parent_loaned_commands) override {
-    // loan all states & command from parent
+    // loan all states & commands from parent
     loaned_states_ = std::move(parent_loaned_states);
     loaned_commands_ = std::move(parent_loaned_commands);
-
-    // initialize storage for previous values, differently from the current value.
-    // this simplifies change detection on the first run.
-    for (const auto &state : loaned_states_) {
-      previous_states_.emplace(state.get_name(), //
-                               state.get_value() > 0. ? -std::numeric_limits<double>::infinity()
-                                                      : std::numeric_limits<double>::infinity());
-    }
-    for (const auto &command : loaned_commands_) {
-      previous_commands_.emplace(command.get_name(), //
-                                 command.get_value() > 0.
-                                     ? -std::numeric_limits<double>::infinity()
-                                     : std::numeric_limits<double>::infinity());
-    }
   }
 
   virtual hi::return_type
@@ -106,55 +92,39 @@ public:
   }
 
   virtual hi::return_type read(const rclcpp::Time &time, const rclcpp::Duration &period) override {
-    // check if any commands have been changed from previous call
-    std::vector<const hi::LoanedCommandInterface *> changed_commands;
-    for (const auto &command : loaned_commands_) {
-      if (!bitwise_equal(previous_commands_[command.get_name()], command.get_value())) {
-        changed_commands.emplace_back(&command);
-      }
-    }
+    // get state & command interfaces with value changes, or all on first run
+    const auto changed_states =
+        (previous_states_.empty()
+             ? pick_pointers(loaned_states_, All{})
+             : pick_pointers(loaned_states_, BitwiseDifferent{previous_states_}));
+    const auto changed_commands =
+        (previous_commands_.empty()
+             ? pick_pointers(loaned_commands_, All{})
+             : pick_pointers(loaned_commands_, BitwiseDifferent{previous_commands_}));
 
-    // check if any states have been changed from previous call
-    std::vector<const hi::LoanedStateInterface *> changed_states;
-    for (const auto &state : loaned_states_) {
-      if (!bitwise_equal(previous_states_[state.get_name()], state.get_value())) {
-        changed_states.push_back(&state);
-      }
-    }
-
-    // do nothing if no change on commands & states
-    if (changed_commands.empty() && changed_states.empty()) {
+    // do nothing if no changed states & commands
+    if (changed_states.empty() && changed_commands.empty()) {
       return hi::return_type::OK;
     }
 
-    // print changed values of interfaces
+    // print changed values
     std::ostringstream msg;
     msg << "MonitorLayer::read()\n";
     msg << "  Time: " << time.nanoseconds() << "ns\n";
     msg << "  Period: " << period.nanoseconds() << "ns\n";
-    if (!changed_commands.empty()) {
-      msg << "  Command interfaces:\n";
-      for (const auto command : changed_commands) {
-        msg << "    " << std::quoted(command->get_name()) << ": " //
-            << std::setprecision(precision_) << command->get_value() << "\n";
-      }
-    }
     if (!changed_states.empty()) {
       msg << "  State interfaces:\n";
-      for (const auto state : changed_states) {
-        msg << "    " << std::quoted(state->get_name()) << ": " //
-            << std::setprecision(precision_) << state->get_value() << "\n";
-      }
+      format(msg, /* n_indent = */ 4, precision_, changed_states);
+    }
+    if (!changed_commands.empty()) {
+      msg << "  Command interfaces:\n";
+      format(msg, /* n_indent = */ 4, precision_, changed_commands);
     }
     RCLCPP_INFO_STREAM(rclcpp::get_logger("layered_hardware"), msg.str());
 
-    // record changed commands & states
-    for (const auto command : changed_commands) {
-      previous_commands_[command->get_name()] = command->get_value();
-    }
-    for (const auto state : changed_states) {
-      previous_states_[state->get_name()] = state->get_value();
-    }
+    // update storage for previous states & commands
+    previous_states_ = extract_values(loaned_states_);
+    previous_commands_ = extract_values(loaned_commands_);
 
     return hi::return_type::OK;
   }
@@ -165,17 +135,62 @@ public:
   }
 
 protected:
-  static bool bitwise_equal(const double a, const double b) {
-    return std::memcmp(&a, &b, sizeof(double)) == 0;
+  // utility: return pointers to interfaces where do_pick(iface.get_value()) returns true
+
+  struct All {
+    bool operator()(const std::size_t /*i*/, const double /*value*/) const { return true; }
+  };
+
+  struct BitwiseDifferent {
+    const std::vector<double> &other_values;
+
+    bool operator()(const std::size_t i, const double value) const {
+      return std::memcmp(&value, &other_values[i], sizeof(double)) != 0;
+    }
+  };
+
+  template <class Interface>
+  static std::vector<const Interface *>
+  pick_pointers(const std::vector<Interface> &ifaces,
+                const std::function<bool(const std::size_t, const double)> &do_pick) {
+    std::vector<const Interface *> result;
+    for (std::size_t i = 0; i < ifaces.size(); ++i) {
+      if (do_pick(i, ifaces[i].get_value())) {
+        result.push_back(&ifaces[i]);
+      }
+    }
+    return result;
+  }
+
+  // utility: compare current and previous values, and output those that meet condition to stream
+  template <class Interface>
+  static void format(std::ostream &os, const std::size_t n_indent, const int precision,
+                     const std::vector<Interface *> &ifaces) {
+    const std::string indent(n_indent, ' ');
+    for (const auto &iface : ifaces) {
+      os << indent << std::quoted(iface->get_name()) << ": " //
+         << std::setprecision(precision) << iface->get_value() << "\n";
+    }
+  }
+
+  // utility: Create a new vector from values of each interface
+  template <class Interface>
+  static std::vector<double> extract_values(const std::vector<Interface> &ifaces) {
+    std::vector<double> values;
+    values.reserve(ifaces.size());
+    for (const auto &iface : ifaces) {
+      values.push_back(iface.get_value());
+    }
+    return values;
   }
 
 protected:
   int precision_;
 
   std::vector<hi::LoanedStateInterface> loaned_states_;
-  std::map<std::string, double> previous_states_;
+  std::vector<double> previous_states_;
   std::vector<hi::LoanedCommandInterface> loaned_commands_;
-  std::map<std::string, double> previous_commands_;
+  std::vector<double> previous_commands_;
 };
 
 } // namespace layered_hardware
