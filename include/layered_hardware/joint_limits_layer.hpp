@@ -51,13 +51,13 @@ public:
         if ((!std::isnan(min)) && (!std::isnan(max)) && (min > max)) {
           LH_WARN(
               "JointLimitsLayer::on_init(): "
-              "Ignored contradictory limit settings where min: %f > max: %f for \"%s\" interface",
+              "Ignored contradictory limit settings where min: %g > max: %g for \"%s\" interface",
               min, max, full_iface_name.c_str());
           continue;
         }
         // store validated limits
         command_limits_.emplace(full_iface_name, std::make_pair(min, max));
-        LH_WARN("JointLimitsLayer::on_init(): Loaded limit settings [%f, %f] for \"%s\" interface",
+        LH_WARN("JointLimitsLayer::on_init(): Loaded limit settings [%g, %g] for \"%s\" interface",
                 min, max, full_iface_name.c_str());
       }
     }
