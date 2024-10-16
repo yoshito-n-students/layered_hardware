@@ -1,7 +1,6 @@
 #ifndef LAYERED_HARDWARE_MOCK_ACTUATOR_LAYER_HPP
 #define LAYERED_HARDWARE_MOCK_ACTUATOR_LAYER_HPP
 
-#include <map>
 #include <memory>
 #include <string>
 #include <utility> // for std::move()
@@ -43,11 +42,13 @@ public:
     }
 
     // parse parameters for this layer as yaml
-    std::map<std::string, YAML::Node> actuator_list;
+    std::vector<std::string> ator_names;
+    std::vector<YAML::Node> ator_params;
     try {
       const YAML::Node params = YAML::Load(params_it->second);
       for (const auto &name_param_pair : params["actuators"]) {
-        actuator_list.emplace(name_param_pair.first.as<std::string>(), name_param_pair.second);
+        ator_names.emplace_back(name_param_pair.first.as<std::string>());
+        ator_params.emplace_back(name_param_pair.second);
       }
     } catch (const YAML::Exception &error) {
       LH_ERROR("MockActuatorLayer::on_init(): %s (on parsing \"%s\" parameter)", //
@@ -56,15 +57,15 @@ public:
     }
 
     // init actuators with param "actuators/<actuator_name>"
-    for (const auto &[ator_name, ator_params] : actuator_list) {
+    for (std::size_t i = 0; i < ator_names.size(); ++i) {
       try {
-        actuators_.emplace_back(new MockActuator(ator_name, ator_params));
+        actuators_.emplace_back(new MockActuator(ator_names[i], ator_params[i]));
       } catch (const std::runtime_error &error) {
         LH_ERROR("MockActuatorLayer::on_init(): Failed to create \"%s\" actuator",
-                 ator_name.c_str());
+                 ator_names[i].c_str());
         return CallbackReturn::ERROR;
       }
-      LH_INFO("MockActuatorLayer::on_init(): Created \"%s\" actuator", ator_name.c_str());
+      LH_INFO("MockActuatorLayer::on_init(): Created \"%s\" actuator", ator_names[i].c_str());
     }
 
     return CallbackReturn::SUCCESS;
