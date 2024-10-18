@@ -55,7 +55,7 @@ install(
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
 install(
-  DIRECTORY config launch urdf
+  DIRECTORY examples
   DESTINATION share/layered_hardware)
 
 # TODO: declare tests here

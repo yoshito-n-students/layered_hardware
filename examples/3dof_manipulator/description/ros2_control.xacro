@@ -1,81 +1,6 @@
-<robot name="example_3dof_manipulator">
+<?xml version="1.0"?>
+<robot>
 
-    <!-- body => [shoulder] => upper_arm -->
-
-    <link name="body">
-        <visual>
-            <geometry>
-                <box size="0.10 0.10 0.10" />
-            </geometry>
-            <material name="body_material">
-                <color rgba="0.08 0.18 0.30 1.0" />
-            </material>
-        </visual>
-    </link>
-
-    <joint name="shoulder" type="revolute">
-        <origin xyz="0 0 0" />
-        <parent link="body" />
-        <child link="upper_arm" />
-        <axis xyz="0 -1 0" />
-        <limit lower="0" upper="3.14" effort="10.0" velocity="1.0" />
-    </joint>
-
-    <link name="upper_arm">
-        <visual>
-            <origin xyz="0.1 0 0" />
-            <geometry>
-                <box size="0.20 0.08 0.08" />
-            </geometry>
-            <material name="upper_arm_material">
-                <color rgba="0.22 0.32 0.44 1.0" />
-            </material>
-        </visual>
-    </link>
-
-    <!-- upper_arm => [elbow] => forearm -->
-
-    <joint name="elbow" type="continuous">
-        <origin xyz="0.2 0 0" />
-        <parent link="upper_arm" />
-        <child link="forearm" />
-        <axis xyz="0 -1 0" />
-    </joint>
-
-    <link name="forearm">
-        <visual>
-            <origin xyz="0.1 0 0" />
-            <geometry>
-                <box size="0.20 0.06 0.06" />
-            </geometry>
-            <material name="forearm_material">
-                <color rgba="0.62 0.83 0.78 1.0" />
-            </material>
-        </visual>
-    </link>
-
-    <!-- forearm => [wrist] => hand -->
-
-    <joint name="wrist" type="revolute">
-        <origin xyz="0.2 0 0" />
-        <parent link="forearm" />
-        <child link="hand" />
-        <axis xyz="0 -1 0" />
-        <limit lower="-1.0" upper="1.0" effort="10.0" velocity="1.0" />
-    </joint>
-
-    <link name="hand">
-        <visual>
-            <geometry>
-                <box size="0.04 0.04 0.04" />
-            </geometry>
-            <material name="hand_material">
-                <color rgba="0.93 0.93 0.93 1.0" />
-            </material>
-        </visual>
-    </link>
-
-    <!-- -->
     <ros2_control name="LayeredHardware" type="system">
         <hardware>
             <plugin>layered_hardware/LayeredHardware</plugin>
@@ -117,8 +42,8 @@
             <command_interface name="velocity">
                 <param name="max">6.0</param>
             </command_interface>
-            <command_interface name="effort"/>
             <state_interface name="position"/>
+            <state_interface name="velocity"/>
         </joint>
 
         <transmission name="shoulder_trans">
@@ -133,8 +58,8 @@
         <joint name="elbow">
             <command_interface name="position"/>
             <command_interface name="velocity"/>
-            <command_interface name="effort"/>
             <state_interface name="position"/>
+            <state_interface name="velocity"/>
         </joint>
 
         <transmission name="elbow_trans">
@@ -147,9 +72,10 @@
         </transmission>
 
         <joint name="wrist">
-            <command_interface name="position">
-            </command_interface>
+            <command_interface name="position"/>
+            <command_interface name="velocity"/>
             <state_interface name="position"/>
+            <state_interface name="velocity"/>
         </joint>
 
         <transmission name="wrist_trans">

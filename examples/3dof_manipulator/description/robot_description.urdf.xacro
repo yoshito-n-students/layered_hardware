@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<robot name="3dof_manipulator" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find layered_hardware)/examples/common/description/materials.xacro" />
+  <xacro:include filename="$(find layered_hardware)/examples/3dof_manipulator/description/model.xacro" />
+  <xacro:include filename="$(find layered_hardware)/examples/3dof_manipulator/description/ros2_control.xacro" />
+
+</robot>

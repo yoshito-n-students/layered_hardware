@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<robot>
+
+    <!-- TODO: add visual, collision, material, etc -->
+
+    <link name="body" />
+
+    <joint name="axis" type="continuous">
+        <parent link="body" />
+        <child link="wheel" />
+    </joint>
+
+    <link name="wheel" />
+
+</robot>

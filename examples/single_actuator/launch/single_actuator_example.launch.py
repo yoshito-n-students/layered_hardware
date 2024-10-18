@@ -30,8 +30,8 @@ def generate_launch_description():
             PathJoinSubstitution(
                 [
                     FindPackageShare("layered_hardware"),
-                    "urdf",
-                    "example.urdf",
+                    "examples/single_actuator/description",
+                    "robot_description.urdf.xacro",
                 ]
             ),
         ]
@@ -41,8 +41,8 @@ def generate_launch_description():
     robot_controllers = PathJoinSubstitution(
         [
             FindPackageShare("layered_hardware"),
-            "config",
-            "example_controllers.yaml",
+            "examples/single_actuator/config",
+            "controllers.yaml",
         ]
     )
     # rviz_config_file = PathJoinSubstitution(
@@ -76,15 +76,14 @@ def generate_launch_description():
     controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", 
-                   "shoulder_position_controller", "elbow_position_controller", "wrist_position_controller", 
+        arguments=["joint_state_broadcaster", "position_controller",
                    "--controller-manager", "/controller_manager"],
     )
 
     sub_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["shoulder_velocity_controller", "elbow_velocity_controller", "wrist_velocity_controller", 
+        arguments=["velocity_controller", "effort_controller",
                    "--inactive", "--controller-manager", "/controller_manager"],
     )
 

@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<robot>
+
+    <ros2_control name="LayeredHardware" type="system">
+        <hardware>
+            <plugin>layered_hardware/LayeredHardware</plugin>
+            <param name="layers">
+                - name: monitor_layer
+                  type: layered_hardware/MonitorLayer
+                - name: joint_limits_layer
+                  type: layered_hardware/JointLimitsLayer
+                - name: transmission_layer
+                  type: layered_hardware/TransmissionLayer
+                - name: mock_actuator_layer
+                  type: layered_hardware/MockActuatorLayer
+            </param>
+            <param name="mock_actuator_layer">
+                actuators:
+                    axis_actuator:
+                        command_mode_map:
+                            axis/position: position
+                            axis/velocity: velocity
+                            axis/effort: effort
+            </param>
+        </hardware>
+
+        <joint name="axis">
+            <command_interface name="position">
+                <param name="min">-1.0</param>
+                <param name="max">1.0</param>
+            </command_interface>
+            <command_interface name="velocity">
+                <param name="max">6.0</param>
+            </command_interface>
+            <command_interface name="effort">
+                <param name="max">1.0</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <transmission name="axis_trans">
+            <plugin>transmission_interface/SimpleTransmission</plugin>
+            <actuator name="axis_actuator" role="axis_actuator"/>
+            <joint name="axis" role="axis">
+                <mechanical_reduction>10.0</mechanical_reduction>
+                <offset>0.0</offset>
+            </joint>
+        </transmission>
+
+    </ros2_control>
+
+</robot>
