@@ -30,4 +30,4 @@ effort_controller:
   ros__parameters:
     joints:
       - axis
-    interface_name: position
+    interface_name: effort
