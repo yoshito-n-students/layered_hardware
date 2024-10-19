@@ -174,7 +174,7 @@ public:
     return result;
   }
 
-private:
+protected:
   // pick some of interfaces based on given config
   template <class LoanedIface, class Iface>
   static std::vector<LoanedIface> loan_interfaces(std::vector<Iface> &ifaces,
