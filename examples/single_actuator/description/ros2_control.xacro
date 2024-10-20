@@ -42,8 +42,8 @@
 
         <transmission name="axis_trans">
             <plugin>transmission_interface/SimpleTransmission</plugin>
-            <actuator name="axis_actuator" role="axis_actuator"/>
-            <joint name="axis" role="axis">
+            <actuator name="axis_actuator" role="actuator"/>
+            <joint name="axis" role="joint">
                 <mechanical_reduction>10.0</mechanical_reduction>
                 <offset>0.0</offset>
             </joint>

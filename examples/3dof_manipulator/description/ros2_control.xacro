@@ -48,8 +48,8 @@
 
         <transmission name="shoulder_trans">
             <plugin>transmission_interface/SimpleTransmission</plugin>
-            <actuator name="shoulder_actuator" role="shoulder_actuator"/>
-            <joint name="shoulder" role="shoulder">
+            <actuator name="shoulder_actuator" role="actuator"/>
+            <joint name="shoulder" role="joint">
                 <mechanical_reduction>10.0</mechanical_reduction>
                 <offset>0.0</offset>
             </joint>
@@ -64,8 +64,8 @@
 
         <transmission name="elbow_trans">
             <plugin>transmission_interface/SimpleTransmission</plugin>
-            <actuator name="elbow_actuator" role="elbow_actuator"/>
-            <joint name="elbow" role="elbow">
+            <actuator name="elbow_actuator" role="actuator"/>
+            <joint name="elbow" role="joint">
                 <mechanical_reduction>5.0</mechanical_reduction>
                 <offset>0.0</offset>
             </joint>
@@ -80,8 +80,8 @@
 
         <transmission name="wrist_trans">
             <plugin>transmission_interface/SimpleTransmission</plugin>
-            <actuator name="wrist_actuator" role="wrist_actuator"/>
-            <joint name="wrist" role="wrist">
+            <actuator name="wrist_actuator" role="actuator"/>
+            <joint name="wrist" role="joint">
                 <mechanical_reduction>2.0</mechanical_reduction>
                 <offset>0.0</offset>
             </joint>
