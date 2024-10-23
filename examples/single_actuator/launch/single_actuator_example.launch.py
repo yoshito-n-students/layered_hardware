@@ -1,11 +1,11 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
-
 from launch_ros.actions import Node
 from launch_ros.descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
+
 
 def generate_launch_description():
     # Default argument values
@@ -46,7 +46,8 @@ def generate_launch_description():
             robot_description_path,
         ]
     )
-    robot_description = {"robot_description": ParameterValue(robot_description_content, value_type=str)}
+    robot_description = {"robot_description": ParameterValue(
+        robot_description_content, value_type=str)}
 
     # Get controller configs
     robot_controllers = PathJoinSubstitution(
@@ -60,8 +61,8 @@ def generate_launch_description():
     # Get display configs
     rviz_config_file = PathJoinSubstitution(
         [
-            FindPackageShare("layered_hardware"), 
-            "examples/single_actuator/config", 
+            FindPackageShare("layered_hardware"),
+            "examples/single_actuator/config",
             "display_config.rviz"]
     )
 
@@ -72,7 +73,7 @@ def generate_launch_description():
         parameters=[robot_controllers],
         output="both",
         remappings=[
-            ("~/robot_description", "/robot_description"),
+            ("~/robot_description", "robot_description"),
         ],
     )
     robot_state_pub_node = Node(
@@ -85,13 +86,13 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["joint_state_broadcaster", "position_controller",
-                   "--controller-manager", "/controller_manager"],
+                   "--controller-manager", "controller_manager"],
     )
     sub_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
         arguments=["velocity_controller", "effort_controller",
-                   "--inactive", "--controller-manager", "/controller_manager"],
+                   "--inactive", "--controller-manager", "controller_manager"],
     )
 
     # Declare visualization nodes
