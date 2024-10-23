@@ -8,16 +8,17 @@ from launch_ros.actions import Node
 from launch_ros.descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 
+
 def generate_launch_description():
     # Declare arguments
     declared_arguments = []
-    #declared_arguments.append(
+    # declared_arguments.append(
     #    DeclareLaunchArgument(
     #        "gui",
     #        default_value="true",
     #        description="Start RViz2 automatically with this launch file.",
     #    )
-    #)
+    # )
 
     # Initialize Arguments
     # gui = LaunchConfiguration("gui")
@@ -36,7 +37,8 @@ def generate_launch_description():
             ),
         ]
     )
-    robot_description = {"robot_description": ParameterValue(robot_description_content, value_type=str)}
+    robot_description = {"robot_description": ParameterValue(
+        robot_description_content, value_type=str)}
 
     robot_controllers = PathJoinSubstitution(
         [
@@ -76,15 +78,15 @@ def generate_launch_description():
     controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", 
-                   "shoulder_position_controller", "elbow_position_controller", "wrist_position_controller", 
+        arguments=["joint_state_broadcaster",
+                   "shoulder_position_controller", "elbow_position_controller", "wrist_position_controller",
                    "--controller-manager", "/controller_manager"],
     )
 
     sub_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["shoulder_velocity_controller", "elbow_velocity_controller", "wrist_velocity_controller", 
+        arguments=["shoulder_velocity_controller", "elbow_velocity_controller", "wrist_velocity_controller",
                    "--inactive", "--controller-manager", "/controller_manager"],
     )
 
