@@ -30,10 +30,10 @@ public:
   }
 
   // find string items in the database
-  std::vector<size_t> find(const std::vector<std::string> &search_list) const {
+  std::vector<std::size_t> find(const std::vector<std::string> &search_list) const {
     std::vector<std::size_t> result;
     for (std::size_t i = 0; i < search_list.size(); ++i) {
-      if (interfaces_.count(search_list[i])) {
+      if (interfaces_.count(search_list[i]) > 0) {
         result.push_back(i);
       }
     }
