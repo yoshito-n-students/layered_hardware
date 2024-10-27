@@ -169,9 +169,9 @@ protected:
     case command_mode::EFFORT:
       return "effort";
     default:
-      std::ostringstream oss;
-      oss << "Unkonwn command mode id (" << static_cast<int>(mode) << ")";
-      throw std::runtime_error(oss.str());
+      std::ostringstream msg;
+      msg << "Unkonwn command mode id (" << static_cast<int>(mode) << ")";
+      throw std::runtime_error(msg.str());
     }
   }
 
