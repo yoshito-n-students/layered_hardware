@@ -45,13 +45,17 @@ public:
       return is_base_initialized;
     }
 
+    // maps converter class name to converter factory.
+    // a factory creates instances of converter from joint to actuator space or vice varsa
+    std::map<std::string, std::unique_ptr<ti::TransmissionLoader>> converter_factories;
+
     // pick converter class names in this hardware
     for (const auto &trans_info : hardware_info.transmissions) {
-      converter_factories_.emplace(trans_info.type, nullptr);
+      converter_factories.emplace(trans_info.type, nullptr);
     }
 
     // load converter factories
-    for (auto &[trans_type, converter_factory] : converter_factories_) {
+    for (auto &[trans_type, converter_factory] : converter_factories) {
       try {
         converter_factory.reset(converter_factory_loader_.createUnmanagedInstance(trans_type));
       } catch (const pluginlib::PluginlibException &error) {
@@ -66,7 +70,7 @@ public:
       const std::string trans_disp_name =
           "\"" + trans_info.name + "\" transmission (" + trans_info.type + ", joint-to-actuator)";
       // create converter from joint to actuator space
-      ti::TransmissionSharedPtr converter = converter_factories_[trans_info.type]->load(trans_info);
+      ti::TransmissionSharedPtr converter = converter_factories[trans_info.type]->load(trans_info);
       if (!converter) {
         LH_ERROR("TransmissionLayer::on_init(): Failed to create converter for %s",
                  trans_disp_name.c_str());
@@ -90,7 +94,7 @@ public:
       const std::string trans_disp_name =
           "\"" + trans_info.name + "\" transmission (" + trans_info.type + ", actuator-to-joint)";
       // create converter from actuator to joint space
-      ti::TransmissionSharedPtr converter = converter_factories_[trans_info.type]->load(trans_info);
+      ti::TransmissionSharedPtr converter = converter_factories[trans_info.type]->load(trans_info);
       if (!converter) {
         LH_ERROR("TransmissionLayer::on_init(): Failed to create converter for %s",
                  trans_disp_name.c_str());
@@ -184,10 +188,6 @@ public:
 protected:
   // plugin loader for converter factories
   pluginlib::ClassLoader<ti::TransmissionLoader> converter_factory_loader_;
-
-  // maps converter class name to converter factory.
-  // a factory creates instances of converter from joint to actuator space or vice varsa
-  std::map<std::string, std::unique_ptr<ti::TransmissionLoader>> converter_factories_;
 
   // maps transmission name to transmission instances.
   // a transmission instance owns a converter,
