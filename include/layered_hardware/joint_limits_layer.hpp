@@ -57,7 +57,7 @@ public:
         }
         // store validated limits
         command_limits_.emplace(full_iface_name, std::make_pair(min, max));
-        LH_WARN("JointLimitsLayer::on_init(): Loaded limit settings [%g, %g] for \"%s\" interface",
+        LH_INFO("JointLimitsLayer::on_init(): Loaded limit settings [%g, %g] for \"%s\" interface",
                 min, max, full_iface_name.c_str());
       }
     }
