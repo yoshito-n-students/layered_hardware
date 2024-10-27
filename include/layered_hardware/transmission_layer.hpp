@@ -76,8 +76,7 @@ public:
       }
       // make transmission owned by this layer
       try {
-        joint_to_actuator_transmissions_.emplace(
-            trans_info.name,
+        joint_to_actuator_transmissions_.emplace_back(
             std::make_unique<JointToActuatorTransmission>(trans_info, std::move(converter)));
       } catch (const std::runtime_error &error) {
         LH_ERROR("TransmissionLayer::on_init(): Failed to create %s: %s", //
@@ -100,8 +99,7 @@ public:
       }
       // make transmission owned by this layer
       try {
-        actuator_to_joint_transmissions_.emplace(
-            trans_info.name,
+        actuator_to_joint_transmissions_.emplace_back(
             std::make_unique<ActuatorToJointTransmission>(trans_info, std::move(converter)));
       } catch (const std::runtime_error &error) {
         LH_ERROR("TransmissionLayer::on_init(): Failed to create %s: %s", //
@@ -117,7 +115,7 @@ public:
   virtual std::vector<hi::StateInterface> export_state_interfaces() override {
     // export handles which hold reference to joint states
     std::vector<hi::StateInterface> ifaces;
-    for (const auto &[trans_name, trans] : actuator_to_joint_transmissions_) {
+    for (const auto &trans : actuator_to_joint_transmissions_) {
       ifaces = merge(std::move(ifaces), trans->export_state_interfaces());
     }
     return ifaces;
@@ -126,7 +124,7 @@ public:
   virtual std::vector<hi::CommandInterface> export_command_interfaces() override {
     // export handles which hold reference to joint commands
     std::vector<hi::CommandInterface> ifaces;
-    for (const auto &[trans_name, trans] : joint_to_actuator_transmissions_) {
+    for (const auto &trans : joint_to_actuator_transmissions_) {
       ifaces = merge(std::move(ifaces), trans->export_command_interfaces());
     }
     return ifaces;
@@ -146,11 +144,11 @@ public:
   assign_interfaces(std::vector<hi::LoanedStateInterface> &&loaned_states,
                     std::vector<hi::LoanedCommandInterface> &&loaned_commands) override {
     // assign references to actuator states to state-converting transmissions
-    for (const auto &[trans_name, trans] : actuator_to_joint_transmissions_) {
+    for (const auto &trans : actuator_to_joint_transmissions_) {
       trans->assign_interfaces(loaned_states);
     }
     // assign references to actuator commands to command-converting transmissions
-    for (const auto &[trans_name, trans] : joint_to_actuator_transmissions_) {
+    for (const auto &trans : joint_to_actuator_transmissions_) {
       trans->assign_interfaces(loaned_commands);
     }
   }
@@ -168,7 +166,7 @@ public:
   virtual hi::return_type read(const rclcpp::Time & /*time*/,
                                const rclcpp::Duration & /*period*/) override {
     // convert actuator states to joint states
-    for (const auto &[trans_name, trans] : actuator_to_joint_transmissions_) {
+    for (const auto &trans : actuator_to_joint_transmissions_) {
       trans->actuator_to_joint();
     }
     return hi::return_type::OK;
@@ -177,7 +175,7 @@ public:
   virtual hi::return_type write(const rclcpp::Time & /*time*/,
                                 const rclcpp::Duration & /*period*/) override {
     // convert joint commands to actuator commands
-    for (const auto &[trans_name, trans] : joint_to_actuator_transmissions_) {
+    for (const auto &trans : joint_to_actuator_transmissions_) {
       trans->joint_to_actuator();
     }
     return hi::return_type::OK;
@@ -187,13 +185,10 @@ protected:
   // plugin loader for converter factories
   pluginlib::ClassLoader<ti::TransmissionLoader> converter_factory_loader_;
 
-  // maps transmission name to transmission instances.
-  // a transmission instance owns a converter,
-  // joint space variables, and actuator space variables
-  std::map<std::string, std::unique_ptr<JointToActuatorTransmission>>
-      joint_to_actuator_transmissions_;
-  std::map<std::string, std::unique_ptr<ActuatorToJointTransmission>>
-      actuator_to_joint_transmissions_;
+  // transmission interfaces.
+  // each instance owns a converter, joint space variables, and actuator space variables
+  std::vector<std::unique_ptr<JointToActuatorTransmission>> joint_to_actuator_transmissions_;
+  std::vector<std::unique_ptr<ActuatorToJointTransmission>> actuator_to_joint_transmissions_;
 };
 
 } // namespace layered_hardware
