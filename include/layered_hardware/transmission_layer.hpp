@@ -45,16 +45,14 @@ public:
       return is_base_initialized;
     }
 
-    // maps converter class name to converter factory.
+    // make map from converter class name to converter factory.
     // a factory creates instances of converter from joint to actuator space or vice varsa
     std::map<std::string, std::unique_ptr<ti::TransmissionLoader>> converter_factories;
-
-    // pick converter class names in this hardware
+    // 1. pick converter class names in this hardware
     for (const auto &trans_info : hardware_info.transmissions) {
       converter_factories.emplace(trans_info.type, nullptr);
     }
-
-    // load converter factories
+    // 2. load converter factories
     for (auto &[trans_type, converter_factory] : converter_factories) {
       try {
         converter_factory.reset(converter_factory_loader_.createUnmanagedInstance(trans_type));
