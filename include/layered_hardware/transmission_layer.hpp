@@ -72,17 +72,16 @@ public:
                  trans_disp_name.c_str());
         return CallbackReturn::ERROR;
       }
-      // create transmission
-      std::unique_ptr<JointToActuatorTransmission> trans;
+      // make transmission owned by this layer
       try {
-        trans.reset(new JointToActuatorTransmission(trans_info, std::move(converter)));
+        joint_to_actuator_transmissions_.emplace(
+            trans_info.name,
+            std::make_unique<JointToActuatorTransmission>(trans_info, std::move(converter)));
       } catch (const std::runtime_error &error) {
         LH_ERROR("TransmissionLayer::on_init(): Failed to create %s: %s", //
                  trans_disp_name.c_str(), error.what());
         return CallbackReturn::ERROR;
       }
-      // make transmission owned by this layer
-      joint_to_actuator_transmissions_[trans_info.name] = std::move(trans);
       LH_INFO("TransmissionLayer::on_init(): Loaded %s", trans_disp_name.c_str());
     }
 
@@ -97,17 +96,16 @@ public:
                  trans_disp_name.c_str());
         return CallbackReturn::ERROR;
       }
-      // create transmission
-      std::unique_ptr<ActuatorToJointTransmission> trans;
+      // make transmission owned by this layer
       try {
-        trans.reset(new ActuatorToJointTransmission(trans_info, std::move(converter)));
+        actuator_to_joint_transmissions_.emplace(
+            trans_info.name,
+            std::make_unique<ActuatorToJointTransmission>(trans_info, std::move(converter)));
       } catch (const std::runtime_error &error) {
         LH_ERROR("TransmissionLayer::on_init(): Failed to create %s: %s", //
                  trans_disp_name.c_str(), error.what());
         return CallbackReturn::ERROR;
       }
-      // make transmission owned by this layer
-      actuator_to_joint_transmissions_[trans_info.name] = std::move(trans);
       LH_INFO("TransmissionLayer::on_init(): Loaded %s", trans_disp_name.c_str());
     }
 
