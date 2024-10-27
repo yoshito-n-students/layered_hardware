@@ -71,7 +71,7 @@ public:
     } else { // active_bound_ifaces.size() >= 2
       LH_ERROR("MockActuator::prepare_command_mode_switch(): "
                "Reject mode switching of \"%s\" actuator "
-               "because %ld bound interfaces are about to be active",
+               "because %zd bound interfaces are about to be active",
                name_.c_str(), active_bound_ifaces.size());
       return hi::return_type::ERROR;
     }
@@ -83,7 +83,7 @@ public:
     if (active_bound_ifaces.size() >= 2) {
       LH_ERROR("MockActuator::perform_command_mode_switch(): "
                "Could not switch mode of \"%s\" actuator "
-               "because %ld bound interfaces are active",
+               "because %zd bound interfaces are active",
                name_.c_str(), bound_interfaces_.size());
       return hi::return_type::ERROR;
     }
