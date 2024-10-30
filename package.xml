@@ -11,17 +11,18 @@
 
   <!-- ROS dependencies -->
   <depend>controller_interface</depend>
-  <depend>controller_manager</depend>
-  <depend>forward_command_controller</depend>
   <depend>hardware_interface</depend>
   <depend>joint_limits</depend>
-  <depend>joint_state_broadcaster</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>transmission_interface</depend>
-  <depend>urdf</depend>
-  <depend>xacro</depend>
+
+  <test_depend>controller_manager</test_depend>
+  <test_depend>forward_command_controller</test_depend>
+  <test_depend>joint_state_broadcaster</test_depend>
+  <test_depend>rviz2</test_depend>
+  <test_depend>xacro</test_depend>
 
   <!-- System dependencies -->
   <depend>yaml-cpp</depend>
