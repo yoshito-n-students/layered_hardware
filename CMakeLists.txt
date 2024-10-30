@@ -15,9 +15,10 @@ find_package(joint_limits REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(transmission_interface REQUIRED)
-# yaml_cpp_vendor builds yaml-cpp if not installed and runs find(yaml-cpp). 
-# Explicit linking to ${YAML_CPP_LIBRARIES} is recommended.
+# yaml_cpp_vendor builds yaml-cpp if not installed
 find_package(yaml_cpp_vendor REQUIRED)
+
+find_package(yaml-cpp REQUIRED)
 
 ## Declare plugins as C++ libraries
 add_library(
