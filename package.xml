@@ -21,6 +21,7 @@
   <test_depend>controller_manager</test_depend>
   <test_depend>forward_command_controller</test_depend>
   <test_depend>joint_state_broadcaster</test_depend>
+  <test_depend>robot_state_publisher</test_depend>
   <test_depend>rviz2</test_depend>
   <test_depend>xacro</test_depend>
 
