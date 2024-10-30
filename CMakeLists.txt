@@ -7,54 +7,65 @@ endif()
 
 # include_directories(include)
 
-# Find ROS dependencies
+## Find ROS dependencies
 find_package(ament_cmake REQUIRED)
 find_package(controller_interface REQUIRED)
-find_package(controller_manager REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(joint_limits REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
 find_package(transmission_interface REQUIRED)
-find_package(urdf REQUIRED)
 
-# Find system dependencies
+## Find system dependencies
 find_package(yaml-cpp REQUIRED)
 
-## Declare a C++ library
+## Declare plugins as C++ libraries
 add_library(
-  layered_hardware_plugins SHARED
-  src/layered_hardware_plugins.cpp)
+  layered_hardware_hardware_plugins SHARED
+  src/layered_hardware_hardware_plugins.cpp)
 target_include_directories(
-  layered_hardware_plugins PUBLIC
+  layered_hardware_hardware_plugins PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 ament_target_dependencies(
-  layered_hardware_plugins
+  layered_hardware_hardware_plugins
   controller_interface
-  controller_manager
+  hardware_interface
+  pluginlib
+  rclcpp)
+target_link_libraries(
+  layered_hardware_hardware_plugins
+  ${YAML_CPP_LIBRARIES})
+
+add_library(
+  layered_hardware_layer_plugins SHARED
+  src/layered_hardware_layer_plugins.cpp)
+target_include_directories(
+  layered_hardware_layer_plugins PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
+ament_target_dependencies(
+  layered_hardware_layer_plugins
+  controller_interface
   hardware_interface
   joint_limits
   pluginlib
   rclcpp
-  rclcpp_components
-  transmission_interface
-  urdf)
+  transmission_interface)
 target_link_libraries(
-  layered_hardware_plugins
+  layered_hardware_layer_plugins
   ${YAML_CPP_LIBRARIES})
-  
-## Declare a C++ executable
 
-pluginlib_export_plugin_description_file(hardware_interface plugins.xml)
-pluginlib_export_plugin_description_file(layered_hardware plugins.xml)
+# Export plugin descriptions
+pluginlib_export_plugin_description_file(hardware_interface hardware_plugins.xml)
+pluginlib_export_plugin_description_file(layered_hardware layer_plugins.xml)
 
+# Install resources
 install(
   DIRECTORY include/
   DESTINATION include)
 install(
-  TARGETS layered_hardware_plugins
+  TARGETS layered_hardware_hardware_plugins layered_hardware_layer_plugins
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)

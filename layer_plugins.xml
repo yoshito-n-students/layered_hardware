@@ -1,12 +1,5 @@
-<library path="layered_hardware_plugins">
+<library path="layered_hardware_layer_plugins">
 
-  <class name="layered_hardware/LayeredHardware"
-         type="layered_hardware::LayeredHardware"
-         base_class_type="hardware_interface::SystemInterface">
-    <description>
-    </description>
-  </class>
-  
   <class name="layered_hardware/JointLimitsLayer"
          type="layered_hardware::JointLimitsLayer"
          base_class_type="layered_hardware::LayerInterface">

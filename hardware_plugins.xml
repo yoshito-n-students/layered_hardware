@@ -1,0 +1,10 @@
+<library path="layered_hardware_hardware_plugins">
+
+  <class name="layered_hardware/LayeredHardware"
+         type="layered_hardware::LayeredHardware"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+    </description>
+  </class>
+
+</library>
