@@ -7,7 +7,7 @@ endif()
 
 # include_directories(include)
 
-# find dependencies
+# Find ROS dependencies
 find_package(ament_cmake REQUIRED)
 find_package(controller_interface REQUIRED)
 find_package(controller_manager REQUIRED)
@@ -18,7 +18,9 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(transmission_interface REQUIRED)
 find_package(urdf REQUIRED)
-find_package(yaml_cpp_vendor REQUIRED)
+
+# Find system dependencies
+find_package(yaml-cpp REQUIRED)
 
 ## Declare a C++ library
 add_library(
@@ -38,9 +40,11 @@ ament_target_dependencies(
   rclcpp
   rclcpp_components
   transmission_interface
-  urdf
-  yaml_cpp_vendor)
-
+  urdf)
+target_link_libraries(
+  layered_hardware_plugins
+  ${YAML_CPP_LIBRARIES})
+  
 ## Declare a C++ executable
 
 pluginlib_export_plugin_description_file(hardware_interface plugins.xml)
