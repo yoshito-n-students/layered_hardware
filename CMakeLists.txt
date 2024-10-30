@@ -7,7 +7,7 @@ endif()
 
 # include_directories(include)
 
-## Find ROS dependencies
+## Find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(controller_interface REQUIRED)
 find_package(hardware_interface REQUIRED)
@@ -15,9 +15,9 @@ find_package(joint_limits REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(transmission_interface REQUIRED)
-
-## Find system dependencies
-find_package(yaml-cpp REQUIRED)
+# yaml_cpp_vendor builds yaml-cpp if not installed and runs find(yaml-cpp). 
+# Explicit linking to ${YAML_CPP_LIBRARIES} is recommended.
+find_package(yaml_cpp_vendor REQUIRED)
 
 ## Declare plugins as C++ libraries
 add_library(
@@ -32,7 +32,8 @@ ament_target_dependencies(
   controller_interface
   hardware_interface
   pluginlib
-  rclcpp)
+  rclcpp
+  yaml_cpp_vendor)
 target_link_libraries(
   layered_hardware_hardware_plugins
   ${YAML_CPP_LIBRARIES})
@@ -51,7 +52,8 @@ ament_target_dependencies(
   joint_limits
   pluginlib
   rclcpp
-  transmission_interface)
+  transmission_interface
+  yaml_cpp_vendor)
 target_link_libraries(
   layered_hardware_layer_plugins
   ${YAML_CPP_LIBRARIES})
