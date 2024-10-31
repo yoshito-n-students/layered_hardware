@@ -29,8 +29,7 @@ A ros2_control implementation that adopts layered scheme
 
 ## Plugins: layered_hardware_layer_plugins
 ### layered_hardware/JointLimitsLayer
-* implements general joint_limits_interface procedures
-* supports both hard & soft limits
+* implements general joint_limits procedures
 
 ### layered_hardware/TransmissionLayer
 * implements general transmission_interface procedures
