@@ -7,29 +7,27 @@ A ros2_control implementation that adopts layered scheme
 
 ![](https://raw.githubusercontent.com/yoshito-n-students/layered_hardware/images/images/layered_scheme_ros2.png)
 
-## Node: layered_hardware_node
-### Parameters
-___~control_frequency___ (double, default: 10.0)
-* frequency of control step (reading from the layers, updating the controllers, and writing to the layers) in Hz
+## Plugins: layered_hardware_hardware_plugins
+### layered_hardware/LayeredHardware
+#### Parameters
+```xml
+<ros2_control name="LayeredHardware" type="system">
+    <hardware>
+        <plugin>layered_hardware/LayeredHardware</plugin>
+        <param name="layers">
+            - name: example_layer # string, required
+              type: layered_hardware/ExampleLayer # string, required
+            - name: ...
+        </param>
+        <param name="example_layer">
+            ... # parameters for the layer
+        </param>
+    </hardware>
+    ...
+</ros2_control>
+```
 
-___~use_expected_period___ (bool, default: false)
-* if true, the node uses the expected control cycle time instead of the actual when reading from/writing to the layers
-* useful as workaround for clock jump
-
-___~robot_description___ or ___robot_description___ (string, default: "")
-* robot description in URDF
-* if both given, ___~robot_description___ will be used
-
-___~layers___ (string array, required)
-* names of layers from upper (controller-side) to bottom (actuator-side)
-
-___~<layer_name>/type___ (string, required)
-* lookup name for each layer plugin like 'layered_hardware/TransmissionLayer'
-
-### Example
-see [examples](examples)
-
-## Plugins: layered_hardware_default_plugins
+## Plugins: layered_hardware_layer_plugins
 ### layered_hardware/JointLimitsLayer
 * implements general joint_limits_interface procedures
 * supports both hard & soft limits
@@ -41,11 +39,26 @@ see [examples](examples)
 * implements mock {position, velocity, effort}-controlled actuators
 * useful to debug your command generation, state visualization nodes, or transmissions without physical actuators and dynamics simulators
 #### Parameters
-___~<layer_name>/actuators___ (string array, required)
-* names of actuators to be managed by this layer
+```xml
+<param name="example_mock_actuator_layer">
+    actuators:
+        example_actuator_1:
+            command_mode_map:
+                # map from actuator's command mode (position, velocity, or effort)
+                # to interface bound to the mode
+                example_joint_1/position: position
+                ...
+        example_actuator_2:
+            command_mode_map:
+                ...
+</param>
+```
 
 ### layered_hardware/MonitorLayer
 * monitors changes on commands and states owned by other layers for debug or logging purpose
+
+## Examples
+see [examples](examples)
 
 ## Related packages
 **[layered_hardware_dynamixel](https://github.com/yoshito-n-students/layered_hardware_dynamixel/tree/jazzy)**
