@@ -5,7 +5,7 @@ A ros2_control implementation that adopts layered scheme
 * every ros2_control's component (ex. joint_limits, transmissions) is implemented as a layer plugin (base_class: [layered_hardware::LayerInterface](include/layered_hardware/layer_interface.hpp))
 * one can reuse plugins of non-actuator-specific layers for different actuators
 
-![](https://raw.githubusercontent.com/yoshito-n-students/layered_hardware/images/images/layered_scheme.png)
+![](https://raw.githubusercontent.com/yoshito-n-students/layered_hardware/images/images/layered_scheme_ros2.png)
 
 ## Node: layered_hardware_node
 ### Parameters
