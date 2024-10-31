@@ -48,14 +48,14 @@ ___~<layer_name>/actuators___ (string array, required)
 * monitors changes on commands and states owned by other layers for debug or logging purpose
 
 ## Related packages
-**[layered_hardware_dynamixel](https://github.com/yoshito-n-students/layered_hardware_dynamixel/tree/humble)**
+**[layered_hardware_dynamixel](https://github.com/yoshito-n-students/layered_hardware_dynamixel/tree/jazzy)**
 * layer implementation for ROBOTIS Dynamixel actuators
 
-**[layered_hardware_epos](https://github.com/yoshito-n-students/layered_hardware_epos/tree/humble)**
+**[layered_hardware_epos](https://github.com/yoshito-n-students/layered_hardware_epos/tree/jazzy)**
 * layer implementation for maxon EPOS actuator controllers
 
-**[layered_hardware_unitree](https://github.com/yoshito-n-students/layered_hardware_unitree/tree/humble)**
+**[layered_hardware_unitree](https://github.com/yoshito-n-students/layered_hardware_unitree/tree/jazzy)**
 * layer implementation for Unitree actuators
 
-**[layered_hardware_ign](https://github.com/yoshito-n-students/layered_hardware_ign/tree/humble)**
+**[layered_hardware_gz](https://github.com/yoshito-n-students/layered_hardware_ign/tree/jazzy)**
 * layer implementation for joints of a virtual robot in the Ignition Gazebo simulator
