@@ -62,7 +62,7 @@ ___<layer_name>.actuators.<actuator_name>.command_mode_map___ (map, required)
 * map to actuator command mode names (`position`, `velocity`, `effort`) from associated interface names (typically joint interfaces)
 
 
-#### Example of 
+#### Example of parameter description
 ```xml
 <param name="example_mock_actuator_layer">
     actuators:
