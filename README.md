@@ -63,7 +63,7 @@ ___<layer_name>.actuators.<actuator_name>.command_mode_map___ (map, required)
 
 
 #### Example of parameter description
-```xml
+```yaml
 <param name="example_mock_actuator_layer">
     actuators:
         example_actuator_1:
