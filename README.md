@@ -86,7 +86,7 @@ see [examples](examples)
 * layer implementation for ROBOTIS Dynamixel actuators
 
 **[layered_hardware_epos](https://github.com/yoshito-n-students/layered_hardware_epos/tree/jazzy)**
-* layer implementation for maxon EPOS actuator controllers
+* layer implementation for Maxon EPOS actuator controllers
 
 **[layered_hardware_unitree](https://github.com/yoshito-n-students/layered_hardware_unitree/tree/jazzy)**
 * layer implementation for Unitree actuators
