@@ -9,19 +9,29 @@ A ros2_control implementation that adopts layered scheme
 
 ## Plugins: layered_hardware_hardware_plugins
 ### layered_hardware/LayeredHardware
-#### Parameters
+#### Hardware parameters
+___layers___ (yaml, required)
+* sequence of layers to be loaded by this ros2_control hardware
+
+___layers[*].name___ (string, required)
+* arbitary name of the layer
+
+___layers[*].type___ (string, required)
+* valid type name of the layer
+* the type must be exported to the layered_hardware package
+* the base class of the type must be [layered_hardware::LayerInterface](include/layered_hardware/layer_interface.hpp)
+
+#### Example of ros2_control-tag in your robot description
 ```xml
 <ros2_control name="LayeredHardware" type="system">
     <hardware>
         <plugin>layered_hardware/LayeredHardware</plugin>
         <param name="layers">
-            - name: example_layer # string, required
-              type: layered_hardware/ExampleLayer # string, required
+            - name: example_layer
+              type: layered_hardware/ExampleLayer
             - name: ...
         </param>
-        <param name="example_layer">
-            ... # parameters for the layer
-        </param>
+        ...
     </hardware>
     ...
 </ros2_control>
@@ -29,32 +39,44 @@ A ros2_control implementation that adopts layered scheme
 
 ## Plugins: layered_hardware_layer_plugins
 ### layered_hardware/JointLimitsLayer
-* implements general joint_limits procedures
+* applies limits to all joint command interfaces within the `write()` function
 
 ### layered_hardware/TransmissionLayer
-* implements general transmission_interface procedures
+* converts joint commands to actuator commands using reduction ratio of transmission within `write()` function
+* converts actuator states to joint states within `read()` function
 
 ### layered_hardware/MockActuatorLayer
 * implements mock {position, velocity, effort}-controlled actuators
+* switches mock actuators' command modes when controllers using associated interfaces activate within `perform_command_mode_swtich()` function
+* changes actuator states based on commands within `write()` function
 * useful to debug your command generation, state visualization nodes, or transmissions without physical actuators and dynamics simulators
-#### Parameters
+
+#### Hardware parameters
+___<layer_name>___ (yaml, required)
+* map of parameter names and values for this layer
+
+___<layer_name>.actuators___ (map, required)
+* map of parameters for each mock actuator
+
+___<layer_name>.actuators.<actuator_name>.command_mode_map___ (map, required)
+* map to actuator command mode names (`position`, `velocity`, `effort`) from associated interface names (typically joint interfaces)
+
+
+#### Example of 
 ```xml
 <param name="example_mock_actuator_layer">
     actuators:
         example_actuator_1:
             command_mode_map:
-                # map from actuator's command mode (position, velocity, or effort)
-                # to interface bound to the mode
                 example_joint_1/position: position
                 ...
         example_actuator_2:
-            command_mode_map:
-                ...
+            ...
 </param>
 ```
 
 ### layered_hardware/MonitorLayer
-* monitors changes on commands and states owned by other layers for debug or logging purpose
+* prints changes on commands and states within `read()` function for debug or logging purpose
 
 ## Examples
 see [examples](examples)
