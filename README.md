@@ -47,7 +47,7 @@ ___layers[*].type___ (string, required)
 
 ### layered_hardware/MockActuatorLayer
 * implements mock {position, velocity, effort}-controlled actuators
-* switches mock actuators' command modes when controllers using associated interfaces activate within `perform_command_mode_swtich()` function
+* switches mock actuators' command modes within `perform_command_mode_swtich()` function when controllers using associated interfaces activate
 * changes actuator states based on commands within `write()` function
 * useful to debug your command generation, state visualization nodes, or transmissions without physical actuators and dynamics simulators
 
