@@ -7,6 +7,13 @@
     </description>
   </class>
 
+  <class name="layered_hardware/JointSaturationLimiterLayer"
+         type="layered_hardware::JointSaturationLimiterLayer"
+         base_class_type="layered_hardware::LayerInterface">
+    <description>
+    </description>
+  </class>
+
   <class name="layered_hardware/MockActuatorLayer"
          type="layered_hardware::MockActuatorLayer"
          base_class_type="layered_hardware::LayerInterface">
