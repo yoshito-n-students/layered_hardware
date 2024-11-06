@@ -39,10 +39,25 @@ ___layers[*].type___ (string, required)
 </ros2_control>
 ```
 
-## Layer plugin:  layered_hardware/JointLimitsLayer
+## Layer plugin:  layered_hardware/JointLimitsLayer (deprecated)
+* __NOT__ based on `joint_limits::JointSaturationLimiter<joint_limits::JointLimits>`
+* loads joint limits from the `ros2_control` tag in the robot description
+* clamps joint commands within the `write()` function (e.g. limits position command using only min and max position limits, ignoring velocity and acceleration limits)
+
+## Layer plugin:  layered_hardware/JointSaturationLimiterLayer
+* based on `joint_limits::JointSaturationLimiter<joint_limits::JointLimits>`
 * applies limits to all joint command interfaces within the `write()` function
 
+### Hardware parameters
+___<layer_name>___ (yaml, optional)
+* map of parameter names and values for this layer
+
+___<layer_name>.robot_description_topic___ (string, default: '/robot_description')
+* topic name for robot description, from which joint limits are loaded
+
+
 ## Layer plugin: layered_hardware/TransmissionLayer
+* based on `transmittion_interface::Transmission`
 * converts joint commands to actuator commands based on reduction ratio of transmission within `write()` function
 * converts actuator states to joint states within `read()` function
 
