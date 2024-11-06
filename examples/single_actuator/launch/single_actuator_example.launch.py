@@ -58,6 +58,15 @@ def generate_launch_description():
         ]
     )
 
+    # Get joint limits
+    joint_limits = PathJoinSubstitution(
+        [
+            FindPackageShare("layered_hardware"),
+            "examples/single_actuator/config",
+            "joint_limits.yaml",
+        ]
+    )
+
     # Get display configs
     rviz_config_file = PathJoinSubstitution(
         [
@@ -70,7 +79,7 @@ def generate_launch_description():
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_controllers],
+        parameters=[robot_controllers, joint_limits],
         output="both",
         remappings=[
             ("~/robot_description", "robot_description"),
