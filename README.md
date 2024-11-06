@@ -21,7 +21,7 @@ ___layers[*].type___ (string, required)
 * the type must be exported to the layered_hardware package
 * the base class of the type must be [layered_hardware::LayerInterface](include/layered_hardware/layer_interface.hpp)
 
-### Example of ros2_control-tag in your robot description
+### Example of `ros2_control` tag in your robot description
 ```xml
 <ros2_control name="LayeredHardware" type="system">
     <hardware>
@@ -39,12 +39,12 @@ ___layers[*].type___ (string, required)
 </ros2_control>
 ```
 
-## Layer plugin:  layered_hardware/JointLimitsLayer (deprecated)
+## Layer plugin: layered_hardware/JointLimitsLayer (deprecated)
 * __NOT__ based on `joint_limits::JointSaturationLimiter<joint_limits::JointLimits>`
 * loads joint limits from the `ros2_control` tag in the robot description
 * clamps joint commands within the `write()` function (e.g. limits position command using only min and max position limits, ignoring velocity and acceleration limits)
 
-## Layer plugin:  layered_hardware/JointSaturationLimiterLayer
+## Layer plugin: layered_hardware/JointSaturationLimiterLayer
 * based on `joint_limits::JointSaturationLimiter<joint_limits::JointLimits>`
 * applies limits to all joint command interfaces within the `write()` function
 
