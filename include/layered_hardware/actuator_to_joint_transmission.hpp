@@ -97,9 +97,9 @@ public:
     try {
       converter_->configure(joint_handles, actuator_handles);
     } catch (const ti::Exception &error) {
-      LH_ERROR("ActuatorToJointTransmission::assign_interfaces(): "
+      lh_error("ActuatorToJointTransmission::assign_interfaces(): "
                "Failed to configure converter for \"%s\" transmission: %s",
-               trans_info_.name.c_str(), error.what());
+               trans_info_.name, error);
       return;
     }
   }

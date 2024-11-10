@@ -37,7 +37,7 @@ public:
     // find parameter group for this layer
     const auto params_it = hardware_info.hardware_parameters.find(layer_name);
     if (params_it == hardware_info.hardware_parameters.end()) {
-      LH_ERROR("MockActuatorLayer::on_init(): \"%s\" parameter is missing", layer_name.c_str());
+      lh_error("MockActuatorLayer::on_init(): \"%s\" parameter is missing", layer_name);
       return CallbackReturn::ERROR;
     }
 
@@ -51,8 +51,7 @@ public:
         ator_params.emplace_back(name_param_pair.second);
       }
     } catch (const YAML::Exception &error) {
-      LH_ERROR("MockActuatorLayer::on_init(): %s (on parsing \"%s\" parameter)", //
-               error.what(), layer_name.c_str());
+      lh_error("MockActuatorLayer::on_init(): %s (on parsing \"%s\" parameter)", error, layer_name);
       return CallbackReturn::ERROR;
     }
 
@@ -61,11 +60,10 @@ public:
       try {
         actuators_.emplace_back(new MockActuator(ator_names[i], ator_params[i]));
       } catch (const std::runtime_error &error) {
-        LH_ERROR("MockActuatorLayer::on_init(): Failed to create \"%s\" actuator",
-                 ator_names[i].c_str());
+        lh_error("MockActuatorLayer::on_init(): Failed to create \"%s\" actuator", ator_names[i]);
         return CallbackReturn::ERROR;
       }
-      LH_INFO("MockActuatorLayer::on_init(): Created \"%s\" actuator", ator_names[i].c_str());
+      lh_info("MockActuatorLayer::on_init(): Created \"%s\" actuator", ator_names[i]);
     }
 
     return CallbackReturn::SUCCESS;

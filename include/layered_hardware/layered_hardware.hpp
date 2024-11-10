@@ -45,7 +45,7 @@ public:
     // check if "layers" parameter is given
     const auto layers_param_it = hardware_info.hardware_parameters.find("layers");
     if (layers_param_it == hardware_info.hardware_parameters.end()) {
-      LH_ERROR("LayeredHardware::on_init(): \"layers\" parameter is missing");
+      lh_error("LayeredHardware::on_init(): \"layers\" parameter is missing");
       return CallbackReturn::ERROR;
     }
 
@@ -58,7 +58,7 @@ public:
         layer_types.push_back(layer_param["type"].as<std::string>());
       }
     } catch (const YAML::Exception &error) {
-      LH_ERROR("LayeredHardware::on_init(): %s (on parsing \"layers\" parameter)", error.what());
+      lh_error("LayeredHardware::on_init(): %s (on parsing \"layers\" parameter)", error);
       return CallbackReturn::ERROR;
     }
 
@@ -66,25 +66,24 @@ public:
     for (std::size_t i = 0; i < layer_names.size(); ++i) {
       const std::string layer_disp_name =
           "\"" + layer_names[i] + "\" layer (" + layer_types[i] + ")";
-      LH_INFO("LayeredHardware::on_init(): Loading %s", layer_disp_name.c_str());
+      lh_info("LayeredHardware::on_init(): Loading %s", layer_disp_name);
       // load layer
       std::unique_ptr<LayerInterface> layer;
       try {
         layer.reset(layer_loader_.createUnmanagedInstance(layer_types[i]));
       } catch (const pluginlib::PluginlibException &error) {
-        LH_ERROR("LayeredHardware::on_init(): %s (on creating %s)", //
-                 error.what(), layer_disp_name.c_str());
+        lh_error("LayeredHardware::on_init(): %s (on creating %s)", error, layer_disp_name);
         return CallbackReturn::ERROR;
       }
       // initialize layer
       const CallbackReturn is_layer_initialized = layer->on_init(layer_names[i], hardware_info);
       if (is_layer_initialized != CallbackReturn::SUCCESS) {
-        LH_ERROR("LayeredHardware::on_init(): Failed to initialize %s", layer_disp_name.c_str());
+        lh_error("LayeredHardware::on_init(): Failed to initialize %s", layer_disp_name);
         return is_layer_initialized;
       }
       // store successfully-loaded layer
       layers_.push_back(std::move(layer));
-      LH_INFO("LayeredHardware::on_init(): Loaded %s", layer_disp_name.c_str());
+      lh_info("LayeredHardware::on_init(): Loaded %s", layer_disp_name);
     }
 
     // check if one layer at least has been loaded??

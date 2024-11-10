@@ -14,7 +14,6 @@
 #include <hardware_interface/loaned_command_interface.hpp>
 #include <hardware_interface/loaned_state_interface.hpp>
 #include <hardware_interface/types/hardware_interface_return_values.hpp>
-// #include <joint_limits/joint_limits.hpp>
 #include <layered_hardware/common_namespaces.hpp>
 #include <layered_hardware/layer_interface.hpp>
 #include <layered_hardware/logging_utils.hpp>
@@ -25,7 +24,6 @@
 namespace layered_hardware {
 
 // JointLimitsLayer currently supports simple clamping between lower and upper limits.
-// it will be updated to use ros2_control/joint_limits for more complex limits once available.
 
 class JointLimitsLayer : public LayerInterface {
 public:
@@ -49,16 +47,16 @@ public:
         }
         // skip contradictory limits
         if ((!std::isnan(min)) && (!std::isnan(max)) && (min > max)) {
-          LH_WARN(
+          lh_warn(
               "JointLimitsLayer::on_init(): "
               "Ignored contradictory limit settings where min: %g > max: %g for \"%s\" interface",
-              min, max, full_iface_name.c_str());
+              min, max, full_iface_name);
           continue;
         }
         // store validated limits
         command_limits_.emplace(full_iface_name, std::make_pair(min, max));
-        LH_INFO("JointLimitsLayer::on_init(): Loaded limit settings [%g, %g] for \"%s\" interface",
-                min, max, full_iface_name.c_str());
+        lh_info("JointLimitsLayer::on_init(): Loaded limit settings [%g, %g] for \"%s\" interface",
+                min, max, full_iface_name);
       }
     }
 

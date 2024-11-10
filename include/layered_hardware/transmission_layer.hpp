@@ -57,8 +57,8 @@ public:
       try {
         converter_factory.reset(converter_factory_loader_.createUnmanagedInstance(trans_type));
       } catch (const pluginlib::PluginlibException &error) {
-        LH_ERROR("TransmissionLayer::on_init(): Failed to load factory for \"%s\": %s",
-                 trans_type.c_str(), error.what());
+        lh_error("TransmissionLayer::on_init(): Failed to load factory for \"%s\": %s", //
+                 trans_type, error);
         return CallbackReturn::ERROR;
       }
     }
@@ -70,8 +70,8 @@ public:
       // create converter from joint to actuator space
       ti::TransmissionSharedPtr converter = converter_factories[trans_info.type]->load(trans_info);
       if (!converter) {
-        LH_ERROR("TransmissionLayer::on_init(): Failed to create converter for %s",
-                 trans_disp_name.c_str());
+        lh_error("TransmissionLayer::on_init(): Failed to create converter for %s",
+                 trans_disp_name);
         return CallbackReturn::ERROR;
       }
       // make transmission owned by this layer
@@ -79,11 +79,10 @@ public:
         joint_to_actuator_transmissions_.emplace_back(
             std::make_unique<JointToActuatorTransmission>(trans_info, std::move(converter)));
       } catch (const std::runtime_error &error) {
-        LH_ERROR("TransmissionLayer::on_init(): Failed to create %s: %s", //
-                 trans_disp_name.c_str(), error.what());
+        lh_error("TransmissionLayer::on_init(): Failed to create %s: %s", trans_disp_name, error);
         return CallbackReturn::ERROR;
       }
-      LH_INFO("TransmissionLayer::on_init(): Loaded %s", trans_disp_name.c_str());
+      lh_info("TransmissionLayer::on_init(): Loaded %s", trans_disp_name);
     }
 
     // create actuator-to-joint transmissions
@@ -93,8 +92,8 @@ public:
       // create converter from actuator to joint space
       ti::TransmissionSharedPtr converter = converter_factories[trans_info.type]->load(trans_info);
       if (!converter) {
-        LH_ERROR("TransmissionLayer::on_init(): Failed to create converter for %s",
-                 trans_disp_name.c_str());
+        lh_error("TransmissionLayer::on_init(): Failed to create converter for %s",
+                 trans_disp_name);
         return CallbackReturn::ERROR;
       }
       // make transmission owned by this layer
@@ -102,11 +101,10 @@ public:
         actuator_to_joint_transmissions_.emplace_back(
             std::make_unique<ActuatorToJointTransmission>(trans_info, std::move(converter)));
       } catch (const std::runtime_error &error) {
-        LH_ERROR("TransmissionLayer::on_init(): Failed to create %s: %s", //
-                 trans_disp_name.c_str(), error.what());
+        lh_error("TransmissionLayer::on_init(): Failed to create %s: %s", trans_disp_name, error);
         return CallbackReturn::ERROR;
       }
-      LH_INFO("TransmissionLayer::on_init(): Loaded %s", trans_disp_name.c_str());
+      lh_info("TransmissionLayer::on_init(): Loaded %s", trans_disp_name);
     }
 
     return CallbackReturn::SUCCESS;

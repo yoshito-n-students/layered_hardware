@@ -46,9 +46,9 @@ public:
 
     // configure command_limiter with current states of the joint
     if (!command_limiter_.configure(loaned_states_.to_data())) {
-      LH_ERROR("IndividualJointSaturationLimiter::configure(): "
+      lh_error("IndividualJointSaturationLimiter::configure(): "
                "Failed to configure command limiter for \"%s\" joint",
-               joint_name_.c_str());
+               joint_name_);
       return hi::return_type::ERROR;
     }
 

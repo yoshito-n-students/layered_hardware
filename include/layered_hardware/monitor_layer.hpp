@@ -43,8 +43,7 @@ public:
         const YAML::Node params = YAML::Load(params_it->second);
         precision_ = params["precision"].as<int>(10);
       } catch (const YAML::Exception &error) {
-        LH_ERROR("MonitorLayer::on_init(): %s (on parsing \"%s\" parameter)", //
-                 error.what(), layer_name.c_str());
+        lh_error("MonitorLayer::on_init(): %s (on parsing \"%s\" parameter)", error, layer_name);
         return CallbackReturn::ERROR;
       }
     }
@@ -119,7 +118,7 @@ public:
       msg << "  Command interfaces:\n";
       format(msg, /* n_indent = */ 4, precision_, changed_commands);
     }
-    LH_INFO(msg.str().c_str());
+    lh_info(msg.str().c_str());
 
     // update storage for previous states & commands
     previous_states_ = extract_values(loaned_states_);

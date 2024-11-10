@@ -69,10 +69,10 @@ public:
     if (active_bound_ifaces.size() <= 1) {
       return hi::return_type::OK;
     } else { // active_bound_ifaces.size() >= 2
-      LH_ERROR("MockActuator::prepare_command_mode_switch(): "
+      lh_error("MockActuator::prepare_command_mode_switch(): "
                "Reject mode switching of \"%s\" actuator "
                "because %zd bound interfaces are about to be active",
-               name_.c_str(), active_bound_ifaces.size());
+               name_, active_bound_ifaces.size());
       return hi::return_type::ERROR;
     }
   }
@@ -81,10 +81,10 @@ public:
     // check how many interfaces associated with actuator command mode are active
     const std::vector<std::size_t> active_bound_ifaces = active_interfaces.find(bound_interfaces_);
     if (active_bound_ifaces.size() >= 2) {
-      LH_ERROR("MockActuator::perform_command_mode_switch(): "
+      lh_error("MockActuator::perform_command_mode_switch(): "
                "Could not switch mode of \"%s\" actuator "
                "because %zd bound interfaces are active",
-               name_.c_str(), bound_interfaces_.size());
+               name_, bound_interfaces_.size());
       return hi::return_type::ERROR;
     }
 
@@ -94,9 +94,9 @@ public:
                                       : command_mode::READ_ONLY /*fallback*/);
     if (present_mode_ != next_mode) {
       present_mode_ = next_mode;
-      LH_INFO("MockActuator::perform_command_mode_switch(): "
+      lh_info("MockActuator::perform_command_mode_switch(): "
               "Switched \"%s\" actuator to \"%s\" mode",
-              name_.c_str(), to_string(present_mode_).c_str());
+              name_, to_string(present_mode_));
     }
     return hi::return_type::OK;
   }
@@ -135,7 +135,7 @@ public:
       return hi::return_type::OK;
     default:
       // should never happen
-      LH_ERROR("MockActuator::write(): Unknown command mode id (%d)",
+      lh_error("MockActuator::write(): Unknown command mode id (%d)",
                static_cast<int>(present_mode_));
       return hi::return_type::ERROR;
     }

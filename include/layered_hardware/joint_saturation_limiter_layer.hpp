@@ -45,8 +45,8 @@ public:
         robot_description_topic = params["robot_description_topic"].as<std::string>();
       }
     } catch (const YAML::Exception &error) {
-      LH_ERROR("JointSaturationLimiterLayer::on_init(): %s (on parsing \"%s\" parameter)", //
-               error.what(), layer_name.c_str());
+      lh_error("JointSaturationLimiterLayer::on_init(): %s (on parsing \"%s\" parameter)", //
+               error, layer_name);
       return CallbackReturn::ERROR;
     }
 
@@ -59,14 +59,14 @@ public:
         command_limiters_.emplace_back(
             new IndividualJointSaturationLimiter(joint_info.name, node, robot_description_topic));
       } catch (const std::runtime_error &error) {
-        LH_ERROR("JointSaturationLimiterLayer::on_init(): "
+        lh_error("JointSaturationLimiterLayer::on_init(): "
                  "%s (on creating command limiter for \"%s\" joint)",
-                 error.what(), joint_info.name.c_str());
+                 error, joint_info.name);
         return CallbackReturn::ERROR;
       }
-      LH_INFO(
+      lh_info(
           "JointSaturationLimiterLayer::on_init(): Created joint command limiter for \"%s\" joint",
-          joint_info.name.c_str());
+          joint_info.name);
     }
 
     return CallbackReturn::SUCCESS;
