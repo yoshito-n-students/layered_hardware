@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <utility> // for std::forward()
 
+#include <rclcpp/logger.hpp>
 #include <rclcpp/logging.hpp>
 
 namespace layered_hardware {
