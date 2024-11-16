@@ -1,9 +1,9 @@
-#ifndef LAYERED_HARDWARE_JOINT_LIMITS_LAYER_HPP
-#define LAYERED_HARDWARE_JOINT_LIMITS_LAYER_HPP
+#ifndef LAYERED_HARDWARE_JOINT_COMMAND_CLAMPER_LAYER_HPP
+#define LAYERED_HARDWARE_JOINT_COMMAND_CLAMPER_LAYER_HPP
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
-#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -23,9 +23,7 @@
 
 namespace layered_hardware {
 
-// JointLimitsLayer currently supports simple clamping between lower and upper limits.
-
-class JointLimitsLayer : public LayerInterface {
+class JointCommandClamperLayer : public LayerInterface {
 public:
   virtual CallbackReturn on_init(const std::string &layer_name,
                                  const hi::HardwareInfo &hardware_info) override {
@@ -38,25 +36,31 @@ public:
     // store joint limits from given hardware info
     for (const auto &joint_info : hardware_info.joints) {
       for (const auto &command_info : joint_info.command_interfaces) {
-        // get joint limits
+        // get full name of interface by joining joint and interface names in official manner
         const std::string full_iface_name =
             hi::CommandInterface(joint_info.name, command_info.name).get_name();
-        const double min = to_double(command_info.min), max = to_double(command_info.max);
-        if (std::isnan(min) && std::isnan(max)) {
+        // get lower & upper limits on the interface
+        const double lower_limit = to_double(command_info.min),
+                     upper_limit = to_double(command_info.max);
+        // skip empty or contradictory limits
+        if (std::isnan(lower_limit) && std::isnan(upper_limit)) {
           continue;
         }
-        // skip contradictory limits
-        if ((!std::isnan(min)) && (!std::isnan(max)) && (min > max)) {
+        if ((!std::isnan(lower_limit)) && (!std::isnan(upper_limit)) &&
+            (lower_limit > upper_limit)) {
           lh_warn(
-              "JointLimitsLayer::on_init(): "
+              "JointCommandClamperLayer::on_init(): "
               "Ignored contradictory limit settings where min: %g > max: %g for \"%s\" interface",
-              min, max, full_iface_name);
+              lower_limit, upper_limit, full_iface_name);
           continue;
         }
         // store validated limits
-        command_limits_.emplace(full_iface_name, std::make_pair(min, max));
-        lh_info("JointLimitsLayer::on_init(): Loaded limit settings [%g, %g] for \"%s\" interface",
-                min, max, full_iface_name);
+        command_names_.emplace_back(full_iface_name);
+        lower_limits_.emplace_back(lower_limit);
+        upper_limits_.emplace_back(upper_limit);
+        lh_info("JointCommandClamperLayer::on_init(): "
+                "Loaded limit settings [%g, %g] for \"%s\" interface",
+                lower_limit, upper_limit, full_iface_name);
       }
     }
 
@@ -80,27 +84,37 @@ public:
 
   virtual ci::InterfaceConfiguration command_interface_configuration() const override {
     // request other layers for command interfaces of joints of interest
-    ci::InterfaceConfiguration config;
-    config.type = ci::interface_configuration_type::INDIVIDUAL;
-    for (const auto &[name, limits] : command_limits_) {
-      config.names.push_back(name);
-    }
-    return config;
+    return {ci::interface_configuration_type::INDIVIDUAL, command_names_};
   }
 
   virtual void
   assign_interfaces(std::vector<hi::LoanedStateInterface> && /*parent_loaned_states*/,
                     std::vector<hi::LoanedCommandInterface> &&parent_loaned_commands) override {
     // loan command handles for joints of interest from parent
+    std::vector<std::string> updated_command_names;
+    std::vector<double> updated_lower_limits, updated_upper_limits;
     std::vector<hi::LoanedCommandInterface> returned_commands;
     for (auto &parent_loaned_command : parent_loaned_commands) {
-      if (command_limits_.count(parent_loaned_command.get_name()) > 0) {
+      // check if limits for the command handle are given
+      const std::size_t i_found = std::find(command_names_.begin(), command_names_.end(),
+                                            parent_loaned_command.get_name()) -
+                                  command_names_.begin();
+      if (i_found < command_names_.size()) {
+        // if limits exists, loan the command handle
         loaned_commands_.emplace_back(std::move(parent_loaned_command));
+        updated_command_names.emplace_back(std::move(command_names_[i_found]));
+        updated_lower_limits.emplace_back(std::move(lower_limits_[i_found]));
+        updated_upper_limits.emplace_back(std::move(upper_limits_[i_found]));
       } else {
+        // if not, move the command handle to temporary strage to return it
         returned_commands.emplace_back(std::move(parent_loaned_command));
       }
     }
+    // update list of returned handles, handle names and limits
     parent_loaned_commands = std::move(returned_commands);
+    command_names_ = std::move(updated_command_names);
+    lower_limits_ = std::move(updated_lower_limits);
+    upper_limits_ = std::move(updated_upper_limits);
   }
 
   virtual hi::return_type
@@ -121,18 +135,20 @@ public:
   virtual hi::return_type write(const rclcpp::Time & /*time*/,
                                 const rclcpp::Duration & /*period*/) override {
     // apply limits to command interfaces
-    for (auto &loaned_command : loaned_commands_) {
+    auto loaned_command = loaned_commands_.begin();
+    auto lower_limit = lower_limits_.begin(), upper_limit = upper_limits_.begin();
+    for (; loaned_command != loaned_commands_.end();
+         ++loaned_command, ++lower_limit, ++upper_limit) {
       // do nothing if the command value is NaN
-      if (std::isnan(loaned_command.get_value())) {
+      if (std::isnan(loaned_command->get_value())) {
         continue;
       }
       // apply limits to numeric command
-      const auto &[min, max] = command_limits_[loaned_command.get_name()];
-      if (!std::isnan(min)) {
-        loaned_command.set_value(std::max(min, loaned_command.get_value()));
+      if (!std::isnan(*lower_limit)) {
+        loaned_command->set_value(std::max(*lower_limit, loaned_command->get_value()));
       }
-      if (!std::isnan(max)) {
-        loaned_command.set_value(std::min(max, loaned_command.get_value()));
+      if (!std::isnan(*upper_limit)) {
+        loaned_command->set_value(std::min(*upper_limit, loaned_command->get_value()));
       }
     }
 
@@ -156,8 +172,9 @@ protected:
   }
 
 protected:
+  std::vector<std::string> command_names_;
+  std::vector<double> lower_limits_, upper_limits_;
   std::vector<hi::LoanedCommandInterface> loaned_commands_;
-  std::map<std::string, std::pair<double, double>> command_limits_;
 };
 
 } // namespace layered_hardware

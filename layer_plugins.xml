@@ -1,7 +1,7 @@
 <library path="layered_hardware_layer_plugins">
 
-  <class name="layered_hardware/JointLimitsLayer"
-         type="layered_hardware::JointLimitsLayer"
+  <class name="layered_hardware/JointCommandClamperLayer"
+         type="layered_hardware::JointCommandClamperLayer"
          base_class_type="layered_hardware::LayerInterface">
     <description>
     </description>
