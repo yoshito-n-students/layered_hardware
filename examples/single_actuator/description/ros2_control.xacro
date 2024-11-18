@@ -9,8 +9,8 @@
                   type: layered_hardware/MonitorLayer
                 - name: joint_saturation_limiter_layer
                   type: layered_hardware/JointSaturationLimiterLayer
-                - name: joint_command_clamper_layer
-                  type: layered_hardware/JointCommandClamperLayer
+                - name: command_clamper_layer
+                  type: layered_hardware/CommandClamperLayer
                 - name: transmission_layer
                   type: layered_hardware/TransmissionLayer
                 - name: mock_actuator_layer
