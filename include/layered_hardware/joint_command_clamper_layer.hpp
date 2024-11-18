@@ -164,6 +164,8 @@ protected:
         iss >> val;
         return val;
       } catch (const std::ios::failure &error) {
+        lh_warn("JointCommandClamperLayer::to_double(): Treating non-convertible \"%s\" as nan: %s",
+                str, error);
         return std::numeric_limits<double>::quiet_NaN();
       }
     } else {
