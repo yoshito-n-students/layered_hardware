@@ -1,5 +1,5 @@
-#ifndef LAYERED_HARDWARE_JOINT_COMMAND_CLAMPER_LAYER_HPP
-#define LAYERED_HARDWARE_JOINT_COMMAND_CLAMPER_LAYER_HPP
+#ifndef LAYERED_HARDWARE_COMMAND_CLAMPER_LAYER_HPP
+#define LAYERED_HARDWARE_COMMAND_CLAMPER_LAYER_HPP
 
 #include <algorithm>
 #include <cmath>
@@ -23,7 +23,7 @@
 
 namespace layered_hardware {
 
-class JointCommandClamperLayer : public LayerInterface {
+class CommandClamperLayer : public LayerInterface {
 public:
   virtual CallbackReturn on_init(const std::string &layer_name,
                                  const hi::HardwareInfo &hardware_info) override {
@@ -33,34 +33,44 @@ public:
       return is_base_initialized;
     }
 
-    // store joint limits from given hardware info
-    for (const auto &joint_info : hardware_info.joints) {
-      for (const auto &command_info : joint_info.command_interfaces) {
-        // get full name of interface by joining joint and interface names in official manner
-        const std::string full_iface_name =
-            hi::CommandInterface(joint_info.name, command_info.name).get_name();
-        // get lower & upper limits on the interface
-        const double lower_limit = to_double(command_info.min),
-                     upper_limit = to_double(command_info.max);
-        // skip empty or contradictory limits
-        if (std::isnan(lower_limit) && std::isnan(upper_limit)) {
-          continue;
-        }
-        if ((!std::isnan(lower_limit)) && (!std::isnan(upper_limit)) &&
-            (lower_limit > upper_limit)) {
-          lh_warn(
-              "JointCommandClamperLayer::on_init(): "
-              "Ignored contradictory limit settings where min: %g > max: %g for \"%s\" interface",
-              lower_limit, upper_limit, full_iface_name);
-          continue;
-        }
-        // store validated limits
-        command_names_.emplace_back(full_iface_name);
-        lower_limits_.emplace_back(lower_limit);
-        upper_limits_.emplace_back(upper_limit);
-        lh_info("JointCommandClamperLayer::on_init(): "
-                "Loaded limit settings [%g, %g] for \"%s\" interface",
+    // store command limits on joint, sensor and gpio info
+    for (const auto components :
+         {&hardware_info.joints, &hardware_info.sensors, &hardware_info.gpios}) {
+      for (const auto &component_info : *components) {
+        for (const auto &command_info : component_info.command_interfaces) {
+          // skip the interface without double-type limits
+          if (!command_info.enable_limits) {
+            continue;
+          }
+          if (command_info.data_type != "double") {
+            continue;
+          }
+          // get full name of interface by joining component and interface names in official manner
+          const std::string full_iface_name =
+              hi::CommandInterface(component_info.name, command_info.name).get_name();
+          // get lower & upper limits on the interface
+          const double lower_limit = to_double(command_info.min),
+                       upper_limit = to_double(command_info.max);
+          // skip empty or contradictory limits
+          if (std::isnan(lower_limit) && std::isnan(upper_limit)) {
+            continue;
+          }
+          if ((!std::isnan(lower_limit)) && (!std::isnan(upper_limit)) &&
+              (lower_limit > upper_limit)) {
+            lh_warn(
+                "CommandClamperLayer::on_init(): "
+                "Ignored contradictory limit settings where min: %g > max: %g for \"%s\" interface",
                 lower_limit, upper_limit, full_iface_name);
+            continue;
+          }
+          // store validated limits
+          command_names_.emplace_back(full_iface_name);
+          lower_limits_.emplace_back(lower_limit);
+          upper_limits_.emplace_back(upper_limit);
+          lh_info(
+              "CommandClamperLayer::on_init(): Loaded limit settings [%g, %g] for \"%s\" interface",
+              lower_limit, upper_limit, full_iface_name);
+        }
       }
     }
 
@@ -83,14 +93,14 @@ public:
   }
 
   virtual ci::InterfaceConfiguration command_interface_configuration() const override {
-    // request other layers for command interfaces of joints of interest
+    // request other layers for command interfaces of interest
     return {ci::interface_configuration_type::INDIVIDUAL, command_names_};
   }
 
   virtual void
   assign_interfaces(std::vector<hi::LoanedStateInterface> && /*parent_loaned_states*/,
                     std::vector<hi::LoanedCommandInterface> &&parent_loaned_commands) override {
-    // loan command handles for joints of interest from parent
+    // loan command handles for interfaces of interest from parent
     std::vector<std::string> updated_command_names;
     std::vector<double> updated_lower_limits, updated_upper_limits;
     std::vector<hi::LoanedCommandInterface> returned_commands;
@@ -110,11 +120,12 @@ public:
         returned_commands.emplace_back(std::move(parent_loaned_command));
       }
     }
-    // update list of returned handles, handle names and limits
-    parent_loaned_commands = std::move(returned_commands);
+    // update list of names and limits with those of loaned handles
     command_names_ = std::move(updated_command_names);
     lower_limits_ = std::move(updated_lower_limits);
     upper_limits_ = std::move(updated_upper_limits);
+    // return unloaned handles to parent
+    parent_loaned_commands = std::move(returned_commands);
   }
 
   virtual hi::return_type
@@ -164,7 +175,7 @@ protected:
         iss >> val;
         return val;
       } catch (const std::ios::failure &error) {
-        lh_warn("JointCommandClamperLayer::to_double(): Treating non-convertible \"%s\" as nan: %s",
+        lh_warn("CommandClamperLayer::to_double(): Treating non-convertible \"%s\" as nan: %s", //
                 str, error);
         return std::numeric_limits<double>::quiet_NaN();
       }
