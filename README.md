@@ -39,9 +39,9 @@ ___layers[*].type___ (string, required)
 </ros2_control>
 ```
 
-## Layer plugin: layered_hardware/JointCommandClamperLayer
-* loads lower and upper limits on joint command interfaces from the `ros2_control` tag in the robot description
-* clamps joint commands within the `write()` function (e.g. limits position command using only min and max position limits, ignoring velocity and acceleration limits)
+## Layer plugin: layered_hardware/CommandClamperLayer
+* loads lower and upper limits on command interfaces of joints, sensors and gpios from the `ros2_control` tag in the robot description
+* clamps commands within the `write()` function (e.g. limits position command using only min and max position limits, ignoring velocity and acceleration limits)
 
 ## Layer plugin: layered_hardware/JointSaturationLimiterLayer
 * based on `joint_limits::JointSaturationLimiter<joint_limits::JointLimits>`
