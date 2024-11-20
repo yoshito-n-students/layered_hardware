@@ -170,9 +170,8 @@ protected:
   static double to_double(const std::string &str) {
     if (!str.empty()) {
       try {
-        std::istringstream iss(str);
         double val;
-        iss >> val;
+        std::istringstream(str) >> val;
         return val;
       } catch (const std::ios::failure &error) {
         lh_warn("CommandClamperLayer::to_double(): Treating non-convertible \"%s\" as nan: %s", //
