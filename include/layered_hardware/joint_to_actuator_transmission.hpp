@@ -22,6 +22,7 @@ namespace layered_hardware {
 class JointToActuatorTransmission {
 public:
   JointToActuatorTransmission(const hi::TransmissionInfo &trans_info,
+                              const std::map<std::string, double> &initial_joint_commands,
                               ti::TransmissionSharedPtr &&converter)
       : trans_info_(trans_info), converter_(std::move(converter)) {
     // converter must be unique because it will be exclusively configured in assign_interfaces()
@@ -36,6 +37,20 @@ public:
     for (const auto &joint_info : trans_info.joints) {
       for (const auto &command_iface : joint_info.command_interfaces) {
         joint_commands_[joint_info.name][command_iface] = std::numeric_limits<double>::quiet_NaN();
+      }
+    }
+
+    // set initial values (if any) to joint command variables
+    for (auto &[joint_name, iface_command_map] : joint_commands_) {
+      for (auto &[iface_name, command] : iface_command_map) {
+        const std::string full_iface_name = hi::CommandInterface(joint_name, iface_name).get_name();
+        const auto found_it = initial_joint_commands.find(full_iface_name);
+        if (found_it != initial_joint_commands.end()) {
+          command = found_it->second;
+          lh_info("JointToActuatorTransmission::JointToActuatorTransmission(): "
+                  "Initialized value of \"%s\" command interface to %g",
+                  full_iface_name, found_it->second);
+        }
       }
     }
 

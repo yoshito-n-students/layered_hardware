@@ -63,6 +63,43 @@ public:
       }
     }
 
+    // pick initial values for joint interfaces in this hardware
+    std::map<std::string, double> initial_joint_states, initial_joint_commands;
+    for (const auto &joint_info : hardware_info.joints) {
+      // iterate double-type STATE interfaces with initial value on a joint
+      for (const auto &state_info : joint_info.state_interfaces) {
+        if (state_info.initial_value.empty() || state_info.data_type != "double") {
+          continue;
+        }
+        const std::string state_name =
+            hi::StateInterface(joint_info.name, state_info.name).get_name();
+        try {
+          std::istringstream(state_info.initial_value) >> initial_joint_states[state_name];
+        } catch (const std::ios::failure &error) {
+          lh_error("ransmissionLayer::on_init(): "
+                   "Failed to parse \"%s\" as intial value for \"%s\" state interface: %s",
+                   state_info.initial_value, state_name, error);
+          return CallbackReturn::ERROR;
+        }
+      }
+      // iterate double-type COMMAND interface with initial value on a joint
+      for (const auto &command_info : joint_info.command_interfaces) {
+        if (command_info.initial_value.empty() || command_info.data_type != "double") {
+          continue;
+        }
+        const std::string command_name =
+            hi::CommandInterface(joint_info.name, command_info.name).get_name();
+        try {
+          std::istringstream(command_info.initial_value) >> initial_joint_commands[command_name];
+        } catch (const std::ios::failure &error) {
+          lh_error("ransmissionLayer::on_init(): "
+                   "Failed to parse \"%s\" as intial value for \"%s\" command interface: %s",
+                   command_info.initial_value, command_name, error);
+          return CallbackReturn::ERROR;
+        }
+      }
+    }
+
     // create joint-to-actuator transmissions
     for (const auto &trans_info : hardware_info.transmissions) {
       const std::string trans_disp_name =
@@ -76,8 +113,8 @@ public:
       }
       // make transmission owned by this layer
       try {
-        joint_to_actuator_transmissions_.emplace_back(
-            std::make_unique<JointToActuatorTransmission>(trans_info, std::move(converter)));
+        joint_to_actuator_transmissions_.emplace_back(std::make_unique<JointToActuatorTransmission>(
+            trans_info, initial_joint_commands, std::move(converter)));
       } catch (const std::runtime_error &error) {
         lh_error("TransmissionLayer::on_init(): Failed to create %s: %s", trans_disp_name, error);
         return CallbackReturn::ERROR;
@@ -98,8 +135,8 @@ public:
       }
       // make transmission owned by this layer
       try {
-        actuator_to_joint_transmissions_.emplace_back(
-            std::make_unique<ActuatorToJointTransmission>(trans_info, std::move(converter)));
+        actuator_to_joint_transmissions_.emplace_back(std::make_unique<ActuatorToJointTransmission>(
+            trans_info, initial_joint_states, std::move(converter)));
       } catch (const std::runtime_error &error) {
         lh_error("TransmissionLayer::on_init(): Failed to create %s: %s", trans_disp_name, error);
         return CallbackReturn::ERROR;
