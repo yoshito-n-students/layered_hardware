@@ -28,7 +28,9 @@
 
         <joint name="axis">
             <command_interface name="position">
+                <!-- TransmissionLayer uses initial_value to initialize the interface -->
                 <param name="initial_value">0.0</param>
+                <!-- JointCommandClamperLayer adjusts command to fit within min and max -->
                 <param name="min">-1.0</param>
                 <param name="max">1.0</param>
             </command_interface>
