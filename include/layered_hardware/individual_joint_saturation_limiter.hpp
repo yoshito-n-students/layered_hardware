@@ -59,7 +59,7 @@ public:
   void enforce(const rclcpp::Duration &period) {
     // get states & commands for the joint
     JointLimitsStateDataType state_data = loaned_states_.to_data(),
-                                 command_data = loaned_commands_.to_data();
+                             command_data = loaned_commands_.to_data();
 
     // enforce limits to command values
     // (command_limiter_.enforce() returns true if limits are enforced, but we simply ignore)
@@ -119,7 +119,11 @@ protected:
       static const auto apply_vector = [](std::optional<Interface> &iface,
                                           const std::vector<double> &vec) {
         if (iface && !vec.empty()) {
-          iface->set_value(vec.front());
+          if (!iface->set_value(vec.front())) {
+            lh_error("IndividualJointSaturationLimiter::JointInterfaces::apply_data(): "
+                     "Failed to update value of \"%s\"",
+                     iface->get_name());
+          }
         }
       };
 

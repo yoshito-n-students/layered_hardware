@@ -156,10 +156,16 @@ public:
       }
       // apply limits to numeric command
       if (!std::isnan(*lower_limit)) {
-        loaned_command->set_value(std::max(*lower_limit, loaned_command->get_value()));
+        if (!loaned_command->set_value(std::max(*lower_limit, loaned_command->get_value()))) {
+          lh_error("CommandClamperLayer::write(): Failed to update value of \"%s\"",
+                   loaned_command->get_name());
+        }
       }
       if (!std::isnan(*upper_limit)) {
-        loaned_command->set_value(std::min(*upper_limit, loaned_command->get_value()));
+        if (!loaned_command->set_value(std::min(*upper_limit, loaned_command->get_value()))) {
+          lh_error("CommandClamperLayer::write(): Failed to update value of \"%s\"",
+                   loaned_command->get_name());
+        }
       }
     }
 

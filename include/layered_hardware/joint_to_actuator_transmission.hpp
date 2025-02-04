@@ -125,8 +125,12 @@ public:
 
     // write actuator command value to external variable
     for (auto &command : loaned_commands_) {
-      command.set_value(
-          actuator_commands_[command.get_prefix_name()][command.get_interface_name()]);
+      if (!command.set_value(
+              actuator_commands_[command.get_prefix_name()][command.get_interface_name()])) {
+        lh_error(
+            "JointToActuatorTransmission::joint_to_actuator(): Failed to update value of \"%s\"",
+            command.get_name());
+      }
     }
   }
 
