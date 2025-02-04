@@ -20,6 +20,7 @@
 #include <rclcpp/duration.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/time.hpp>
+#include <trajectory_msgs/msg/joint_trajectory_point.hpp>
 
 namespace layered_hardware {
 
@@ -57,7 +58,7 @@ public:
 
   void enforce(const rclcpp::Duration &period) {
     // get states & commands for the joint
-    jl::JointLimitsStateDataType state_data = loaned_states_.to_data(),
+    JointLimitsStateDataType state_data = loaned_states_.to_data(),
                                  command_data = loaned_commands_.to_data();
 
     // enforce limits to command values
@@ -69,6 +70,8 @@ public:
   }
 
 protected:
+  using JointLimitsStateDataType = trajectory_msgs::msg::JointTrajectoryPoint;
+
   // strage for interfaces of a single joint
   template <typename Interface> class JointInterfaces {
   public:
@@ -94,7 +97,7 @@ protected:
     }
 
     // export values on internal interfaces as Data
-    jl::JointLimitsStateDataType to_data() const {
+    JointLimitsStateDataType to_data() const {
       static const auto to_vector = [](const std::optional<Interface> &iface) {
         // returns the value from interface in a vector,
         // or an empty vector if interface is unavailable or value is NaN.
@@ -103,7 +106,7 @@ protected:
         return (!std::isnan(value)) ? std::vector<double>(1, value) : std::vector<double>();
       };
 
-      jl::JointLimitsStateDataType data;
+      JointLimitsStateDataType data;
       data.positions = to_vector(pos_iface_);
       data.velocities = to_vector(vel_iface_);
       data.accelerations = to_vector(acc_iface_);
@@ -112,7 +115,7 @@ protected:
     }
 
     // update values on internal interfaces with given data
-    void apply_data(const jl::JointLimitsStateDataType &data) {
+    void apply_data(const JointLimitsStateDataType &data) {
       static const auto apply_vector = [](std::optional<Interface> &iface,
                                           const std::vector<double> &vec) {
         if (iface && !vec.empty()) {
@@ -132,7 +135,7 @@ protected:
 
 protected:
   const std::string joint_name_;
-  jl::JointSaturationLimiter<jl::JointLimits> command_limiter_;
+  jl::JointSaturationLimiter<JointLimitsStateDataType> command_limiter_;
   JointInterfaces<hi::LoanedCommandInterface> loaned_commands_;
   JointInterfaces<hi::LoanedStateInterface> loaned_states_;
 };

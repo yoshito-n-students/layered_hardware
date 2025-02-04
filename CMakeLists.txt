@@ -14,6 +14,7 @@ find_package(hardware_interface REQUIRED)
 find_package(joint_limits REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(trajectory_msgs REQUIRED)
 find_package(transmission_interface REQUIRED)
 # yaml_cpp_vendor builds yaml-cpp if not installed
 find_package(yaml_cpp_vendor REQUIRED)
@@ -53,6 +54,7 @@ ament_target_dependencies(
   joint_limits
   pluginlib
   rclcpp
+  trajectory_msgs
   transmission_interface
   yaml_cpp_vendor)
 target_link_libraries(

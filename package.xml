@@ -15,6 +15,7 @@
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
+  <depend>trajectory_msgs</depend>
   <depend>transmission_interface</depend>
   <depend>yaml_cpp_vendor</depend>
 
