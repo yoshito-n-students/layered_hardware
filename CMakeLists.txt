@@ -11,7 +11,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(controller_interface REQUIRED)
 find_package(hardware_interface REQUIRED)
-find_package(joint_limits REQUIRED)
+# find_package(joint_limits REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(transmission_interface REQUIRED)
@@ -50,7 +50,7 @@ ament_target_dependencies(
   layered_hardware_layer_plugins
   controller_interface
   hardware_interface
-  joint_limits
+  # joint_limits
   pluginlib
   rclcpp
   transmission_interface

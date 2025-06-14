@@ -11,7 +11,7 @@
 
   <depend>controller_interface</depend>
   <depend>hardware_interface</depend>
-  <depend>joint_limits</depend>
+  <!-- <depend>joint_limits</depend> -->
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
